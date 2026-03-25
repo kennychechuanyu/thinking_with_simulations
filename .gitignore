@@ -1,3 +1,14 @@
+# Manuscript (not for public repo)
+main.tex
+main.pdf
+references.bib
+wlscirep.cls
+naturemag-doi.bst
+jabbrv.sty
+jabbrv-ltwa-*.ldf
+fig1_cycle.tex
+Figures/*.pdf
+
 # LaTeX build artifacts
 *.aux
 *.bbl
