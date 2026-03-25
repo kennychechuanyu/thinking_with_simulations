@@ -25,7 +25,7 @@
 \affil[*]{kenny.yu@kuleuven.be}
 
 \begin{abstract}
-Computational models are central to behavioral science, yet a gap persists between knowing how to build a model and knowing how to \emph{think} with one. This tutorial in methodological reasoning introduces the Simulation Thinking Cycle, a six-step framework (Question, Formalize, Predict, Simulate, Surprise, Reflect) that structures simulation as a discipline of theoretical reasoning rather than a purely computational technique. Through worked examples using associative learning models, I develop six thinking skills: formulating simulatable questions, recognizing implicit commitments, discovering hidden predictions, designing critical experiments, evaluating robustness across parameter spaces, and bridging idealized predictions to realistic experiments. Three methodological contributions are emphasized: a commitment anatomy that decomposes models into core claims, auxiliary assumptions, and implementation choices (clarifying what a failed prediction actually tests); the demonstration that observation functions can qualitatively alter which model appears to fit data; and a distinction between structural and parametric predictions that separates theoretical claims from artifacts of parameterization. All skills are demonstrated through annotated R code with prediction checkpoints and hands-on exercises. Although the running examples use the Rescorla-Wagner and Mackintosh models, the techniques generalize to other computational models in behavioral science. All code and materials are available at \url{https://osf.io/f97rz/}.
+Computational models are central to behavioral science, yet a gap persists between knowing how to build a model and knowing how to \emph{think} with one. This tutorial in methodological reasoning introduces the Simulation Thinking Cycle, a six-step framework (Question, Formalize, Predict, Simulate, Surprise, Reflect) that structures simulation as a discipline of theoretical reasoning rather than a purely computational technique. Through worked examples using associative learning models, I develop six thinking skills: formulating simulatable questions, recognizing implicit commitments, discovering hidden predictions, designing critical experiments, evaluating robustness across parameter spaces, and bridging idealized predictions to realistic experiments. Three methodological contributions are emphasized: a commitment anatomy that decomposes models into core claims, auxiliary assumptions, and implementation choices (clarifying what a failed prediction actually tests); the demonstration that observation functions can qualitatively alter which model appears to fit data; and a distinction between structural and parametric predictions that separates theoretical claims from artifacts of parameterization. All skills are demonstrated through annotated R code with prediction checkpoints and hands-on exercises. Although the running examples use the Rescorla-Wagner and Mackintosh models, the techniques generalize to other computational models in behavioral science. All code and materials are available at \url{https://github.com/kennychechuanyu/thinking_with_simulations}.
 \end{abstract}
 
 \begin{document}
@@ -72,7 +72,7 @@ After working through this tutorial, readers should be able to formalize vague t
 
 \subsection*{Prerequisites and Setup}
 
-This tutorial assumes familiarity with basic R programming (loops, functions, vectors) and elementary statistics ($t$-tests, $p$-values). No prior knowledge of associative learning is needed; the models are introduced from scratch. The companion code requires R~$\geq$~4.0 with the \texttt{ggplot2} and \texttt{viridis} packages. All code is available at \url{https://osf.io/f97rz/}. Working through the full tutorial takes approximately 3--4 hours. The companion code is organized into modular scripts: \texttt{R/models.R} contains reusable model functions, \texttt{analysis/01\_blocking.R} through \texttt{analysis/05\_novel\_figures.R} contain section-by-section worked examples and figure generation, and \texttt{R/exercises.R} collects all hands-on exercises. Each analysis script can be run independently.
+This tutorial assumes familiarity with basic R programming (loops, functions, vectors) and elementary statistics ($t$-tests, $p$-values). No prior knowledge of associative learning is needed; the models are introduced from scratch. The companion code requires R~$\geq$~4.0 with the \texttt{ggplot2} and \texttt{viridis} packages. All code is available at \url{https://github.com/kennychechuanyu/thinking_with_simulations}. Working through the full tutorial takes approximately 3--4 hours. The companion code is organized into modular scripts: \texttt{R/models.R} contains reusable model functions, \texttt{analysis/01\_blocking.R} through \texttt{analysis/05\_novel\_figures.R} contain section-by-section worked examples and figure generation, and \texttt{R/exercises.R} collects all hands-on exercises. Each analysis script can be run independently.
 
 \begin{table}[t]
 \centering
@@ -751,10 +751,10 @@ The author declares no conflicts of interest.
 Not applicable. This paper is a methodological tutorial involving no human participants.
 
 \subsection*{Data availability}
-All code and materials are available at \url{https://osf.io/f97rz/}.
+All code and materials are available at \url{https://github.com/kennychechuanyu/thinking_with_simulations}.
 
 \subsection*{Open practices statement}
-All simulation code, analysis scripts, and figure-generating scripts are publicly available at \url{https://osf.io/f97rz/}. No empirical data were collected.
+All simulation code, analysis scripts, and figure-generating scripts are publicly available at \url{https://github.com/kennychechuanyu/thinking_with_simulations}. No empirical data were collected.
 
 \subsection*{Author contributions}
 K.Y. conceived the tutorial, wrote the manuscript, and developed all simulation code.
