@@ -1,15 +1,21 @@
-# Thinking With Models Through Simulation
+# Thinking With Models Through Simulation: A Methodological Tutorial
 
-Companion code and materials for the tutorial paper *Thinking With Models Through Simulation* by Kenny Yu.
+Companion code and materials for the tutorial paper:
+
+> Yu, K. (2026). Thinking With Models Through Simulation: A Methodological Tutorial. *Manuscript in preparation.*
 
 ## Overview
 
-This tutorial develops the Simulation Thinking Cycle, a six-step framework for using computational simulation as a discipline of theoretical reasoning. Through worked examples using associative learning models (Rescorla-Wagner and Mackintosh), it demonstrates how simulation reveals hidden predictions, how to design critical experiments through model comparison, and how to separate structural theoretical claims from artifacts of parameterization.
+This methodological tutorial articulates the Simulation Thinking Cycle, a six-step framework (Question, Formalize, Predict, Simulate, Surprise, Reflect) for using computational simulation as a discipline of theoretical reasoning. Through worked examples using associative learning models (Rescorla-Wagner and Mackintosh), it develops six thinking skills and three methodological distinctions:
+
+- **Commitment anatomy**: decomposing models into core claims, auxiliary assumptions, and implementation choices
+- **Observation functions**: how the mapping from internal states to behavior can qualitatively alter which model appears to fit data
+- **Structural vs. parametric predictions**: separating theoretical claims from artifacts of parameterization
 
 ## Requirements
 
-- **R >= 4.0** (base R only for all analyses)
-- **ggplot2** and **viridis** (for figure generation only)
+- **R >= 4.0** (base R only for core analyses)
+- **ggplot2** and **viridis** (for figure generation)
 
 ## File Organization
 
@@ -25,14 +31,12 @@ analysis/
   04_virtual_experiment.R   Section 5: Virtual experiment and power analysis
   05_novel_figures.R        Figures 9-11: Overexpectation sweep, observation
                               function impact, mechanism isolation
+  06_robustness.R           Section 4.7: Robustness checks for the critical test
 
-figures.R                   Generate all manuscript figures (2-11)
+figures.R                   Generate all manuscript figures
 run_all.R                   Reproduce everything in one command
 
-Figures/                    All 11 figures (PDF and PNG)
-
-main.tex                   Manuscript source
-references.bib             Bibliography
+Figures/                    All 14 figures (PNG)
 ```
 
 ## How to Run
@@ -59,6 +63,7 @@ Each analysis script sources `R/models.R` automatically and can be run independe
 | `analysis/03_parameter_sweep.R` | ~10 seconds |
 | `analysis/04_virtual_experiment.R` | ~3-5 minutes |
 | `analysis/05_novel_figures.R` | ~10 seconds |
+| `analysis/06_robustness.R` | ~10 seconds |
 | `figures.R` | ~5 minutes |
 | **Total (`run_all.R`)** | **~5-8 minutes** |
 
@@ -68,4 +73,4 @@ All scripts use `set.seed(2026)` for reproducible results.
 
 ## License
 
-Code is released under the MIT License. The manuscript text is copyright the author.
+Code is released under the MIT License.

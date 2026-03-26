@@ -17,6 +17,9 @@ source("analysis/03_parameter_sweep.R")
 cat("\nSection 5: Virtual Experiment and Power Analysis...\n")
 source("analysis/04_virtual_experiment.R")
 
+cat("\nSection 4.7: Robustness of the Critical Test...\n")
+source("analysis/06_robustness.R")
+
 cat("\nNovel Figures (Sections 3-4 additions)...\n")
 source("analysis/05_novel_figures.R")
 
