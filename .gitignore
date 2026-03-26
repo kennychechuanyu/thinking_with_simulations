@@ -27,6 +27,6 @@ Thumbs.db
 *.swp
 *~
 
-# Claude config
-.claude/
+# Local config
+.local/
 memory/
