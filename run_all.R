@@ -23,6 +23,9 @@ source("analysis/06_robustness.R")
 cat("\nNovel Figures (Sections 3-4 additions)...\n")
 source("analysis/05_novel_figures.R")
 
+cat("\nInterlude: Recognition Memory Transfer Case...\n")
+source("analysis/06_recognition_memory.R")
+
 cat("\nGenerating all figures...\n")
 source("figures.R")
 
