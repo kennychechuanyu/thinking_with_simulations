@@ -1,5 +1,5 @@
 # ============================================================================
-# Section 6 — Robustness Checks for the Critical Test
+# Section 4.7 — Robustness Checks for the Critical Test
 # ============================================================================
 # Tests whether the flagship model-comparison result (blocking-plus-acquisition
 # design that distinguishes Rescorla-Wagner from Mackintosh) is robust to:
@@ -143,21 +143,22 @@ cat("Generating Figure 12: Observation function sensitivity...\n")
 obs_long <- rbind(
   data.frame(alpha_A = obs_sweep$alpha_A, beta = obs_sweep$beta,
              divergence = obs_sweep$div_raw,
-             metric = "Raw V"),
+             metric = "Raw~italic(V)[B]"),
   data.frame(alpha_A = obs_sweep$alpha_A, beta = obs_sweep$beta,
              divergence = obs_sweep$div_sigmoid,
-             metric = "Sigmoid (gamma=5, theta=0.5)"),
+             metric = "Sigmoid~(gamma==5*','~theta==0.5)"),
   data.frame(alpha_A = obs_sweep$alpha_A, beta = obs_sweep$beta,
              divergence = obs_sweep$div_threshold,
-             metric = "Threshold (theta=0.3)")
+             metric = "Threshold~(theta==0.3)")
 )
 obs_long$metric <- factor(obs_long$metric,
-                          levels = c("Raw V", "Sigmoid (gamma=5, theta=0.5)",
-                                     "Threshold (theta=0.3)"))
+                          levels = c("Raw~italic(V)[B]",
+                                     "Sigmoid~(gamma==5*','~theta==0.5)",
+                                     "Threshold~(theta==0.3)"))
 
 fig12 <- ggplot(obs_long, aes(x = alpha_A, y = beta)) +
   geom_raster(aes(fill = divergence), interpolate = TRUE) +
-  facet_wrap(~metric, nrow = 1) +
+  facet_wrap(~metric, nrow = 1, labeller = label_parsed) +
   annotate("point", x = 0.4, y = 0.3,
            shape = 3, size = 2, color = "white", stroke = 1) +
   scale_fill_viridis(option = "D", name = "Divergence",
@@ -469,14 +470,16 @@ save_fig(fig14, "fig14_robustness_attention", width = 5, height = 4)
 
 cat("\n=== Robustness Check Summary ===\n")
 cat("A. Observation function: The parameter region where models diverge shifts\n")
-cat("   depending on the observation function, but divergence is present under\n")
-cat("   all three functions across a broad parameter range.\n")
-cat("B. V_B reset: Divergence persists even with partial generalization (g > 0).\n")
-cat("   The hard-reset assumption (g = 0) is not required for the critical test.\n")
+cat("   depending on the observation function. Under raw V and sigmoid, divergence\n")
+cat("   spans a broad region. Under threshold mapping, qualitative disagreement\n")
+cat("   depends on the threshold value and may be compressed or expanded.\n")
+cat("B. V_B reset: The qualitative ordering (RW > Mack in Phase 3) persists across\n")
+cat("   the tested range of generalization values, but divergence magnitude decreases\n")
+cat("   as generalization increases.\n")
 cat("C. Divergence metric: All three metrics (absolute, ratio, learning slope)\n")
 cat("   agree qualitatively that RW learns faster in Phase 3.\n")
 cat("D. Attention parameters: Divergence increases with beta_down (stronger\n")
 cat("   attention suppression). The critical test works across all tested\n")
 cat("   beta_up x beta_down combinations.\n")
 
-cat("\nDone. Run this script with: source('analysis/06_robustness.R')\n")
+cat("\nDone. Run this script with: source('analysis/07_robustness.R')\n")

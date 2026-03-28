@@ -6,7 +6,7 @@ Companion code and materials for the tutorial paper:
 
 ## Overview
 
-This methodological tutorial articulates the Simulation Thinking Cycle, a six-step framework (Question, Formalize, Predict, Simulate, Surprise, Reflect) for using computational simulation as a discipline of theoretical reasoning. Through worked examples using associative learning models (Rescorla-Wagner and Mackintosh), it develops six thinking skills and three methodological distinctions:
+This methodological tutorial articulates the Simulation Thinking Cycle, a six-step framework (Question, Formalize, Anticipate, Simulate, Surprise, Reflect) for using computational simulation as a discipline of theoretical reasoning. Through worked examples using associative learning models (Rescorla-Wagner and Mackintosh), it develops six thinking skills and three methodological distinctions:
 
 - **Commitment anatomy**: decomposing models into core claims, auxiliary assumptions, and implementation choices
 - **Observation functions**: how the mapping from internal states to behavior can qualitatively alter which model appears to fit data
@@ -31,12 +31,13 @@ analysis/
   04_virtual_experiment.R   Section 5: Virtual experiment and power analysis
   05_novel_figures.R        Figures 9-11: Overexpectation sweep, observation
                               function impact, mechanism isolation
-  06_robustness.R           Section 4.7: Robustness checks for the critical test
+  07_robustness.R           Section 4.7: Robustness checks for the critical test
+  08_model_recovery.R       Section 5 extension: Simplified model recovery analysis
 
 figures.R                   Generate all manuscript figures
 run_all.R                   Reproduce everything in one command
 
-Figures/                    All 14 figures (PNG)
+Figures/                    All figures (PNG)
 ```
 
 ## How to Run
@@ -63,7 +64,8 @@ Each analysis script sources `R/models.R` automatically and can be run independe
 | `analysis/03_parameter_sweep.R` | ~10 seconds |
 | `analysis/04_virtual_experiment.R` | ~3-5 minutes |
 | `analysis/05_novel_figures.R` | ~10 seconds |
-| `analysis/06_robustness.R` | ~10 seconds |
+| `analysis/07_robustness.R` | ~10 seconds |
+| `analysis/08_model_recovery.R` | ~2-5 minutes |
 | `figures.R` | ~5 minutes |
 | **Total (`run_all.R`)** | **~5-8 minutes** |
 

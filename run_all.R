@@ -17,14 +17,14 @@ source("analysis/03_parameter_sweep.R")
 cat("\nSection 5: Virtual Experiment and Power Analysis...\n")
 source("analysis/04_virtual_experiment.R")
 
-cat("\nSection 4.7: Robustness of the Critical Test...\n")
-source("analysis/06_robustness.R")
-
-cat("\nNovel Figures (Sections 3-4 additions)...\n")
+cat("\nSections 3-4: Novel Figures (overexpectation sweep, obs function, mechanism isolation)...\n")
 source("analysis/05_novel_figures.R")
 
-cat("\nInterlude: Recognition Memory Transfer Case...\n")
-source("analysis/06_recognition_memory.R")
+cat("\nSection 4.7: Robustness of the Critical Test...\n")
+source("analysis/07_robustness.R")
+
+cat("\nSection 5 Extension: Model Recovery Analysis...\n")
+source("analysis/08_model_recovery.R")
 
 cat("\nGenerating all figures...\n")
 source("figures.R")

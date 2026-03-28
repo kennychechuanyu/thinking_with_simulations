@@ -144,7 +144,7 @@ save_fig(fig3, "fig3_overexpectation")
 
 
 # ============================================================================
-# FIGURE 4: Critical Test (Section 3.4)
+# FIGURE 4: Critical Test (Section 3.3)
 # ============================================================================
 cat("Generating Figure 4: Critical test...\n")
 
@@ -184,21 +184,38 @@ p2_end <- max(fig4_data$trial[fig4_data$phase == "Phase 2"])
 p3_mid <- (p2_end + max(fig4_data$trial)) / 2
 y_top  <- max(fig4_data$V) * 1.12
 
+# Get final V_B values for endpoint annotations
+rw_final_vb  <- tail(fig4_data$V[fig4_data$model == "Rescorla-Wagner"], 1)
+mack_final_vb <- tail(fig4_data$V[fig4_data$model == "Mackintosh"], 1)
+last_trial    <- max(fig4_data$trial)
+
+# Subtle Phase 3 highlight
 fig4 <- ggplot(fig4_data, aes(x = trial, y = V, color = model, linetype = model)) +
+  annotate("rect", xmin = p2_end + 0.5, xmax = last_trial + 0.5,
+           ymin = -0.05, ymax = y_top + 0.03, fill = "#F5F5FA", alpha = 0.7) +
   geom_vline(xintercept = c(p1_end + 0.5, p2_end + 0.5),
              linetype = "longdash", color = "#D0D0D0", linewidth = 0.3) +
   geom_line(linewidth = 0.7) +
   geom_point(size = 1.0) +
   annotate("text", x = p1_end / 2, y = y_top,
-           label = "Phase 1\nA+", size = 2.2, color = "#999999", lineheight = 0.9) +
+           label = "Phase 1\nA+", size = 2.2, color = "#AAAAAA", lineheight = 0.9) +
   annotate("text", x = (p1_end + p2_end) / 2, y = y_top,
-           label = "Phase 2\nAB+", size = 2.2, color = "#999999", lineheight = 0.9) +
+           label = "Phase 2\nAB+", size = 2.2, color = "#AAAAAA", lineheight = 0.9) +
   annotate("text", x = p3_mid, y = y_top,
-           label = "Phase 3\nB->new", size = 2.2, color = "#999999", lineheight = 0.9) +
+           label = "Phase 3\nB\u2192new", size = 2.4, color = "#555555",
+           fontface = "bold", lineheight = 0.9) +
+  # Endpoint value annotations
+  annotate("text", x = last_trial + 0.8, y = rw_final_vb,
+           label = sprintf("%.2f", rw_final_vb), size = 2.3,
+           color = pal[["blue"]], hjust = 0, fontface = "bold") +
+  annotate("text", x = last_trial + 0.8, y = mack_final_vb,
+           label = sprintf("%.2f", mack_final_vb), size = 2.3,
+           color = pal[["red"]], hjust = 0, fontface = "bold") +
   scale_color_manual(values = c("Rescorla-Wagner" = pal[["blue"]],
                                 "Mackintosh" = pal[["red"]])) +
   scale_linetype_manual(values = c("Rescorla-Wagner" = "solid",
                                    "Mackintosh" = "dashed")) +
+  scale_x_continuous(expand = expansion(mult = c(0.02, 0.08))) +
   scale_y_continuous(limits = c(-0.05, y_top + 0.05), breaks = seq(0, 1, 0.25)) +
   labs(x = "Trial", y = expression(italic(V)[B]), color = NULL, linetype = NULL) +
   theme_pub() +
@@ -208,7 +225,7 @@ save_fig(fig4, "fig4_critical_test", width = 5.5, height = 3.5)
 
 
 # ============================================================================
-# FIGURE 5: Alpha Dynamics (Section 3.4)
+# FIGURE 5: Alpha Dynamics (Section 3.3)
 # ============================================================================
 cat("Generating Figure 5: Alpha dynamics...\n")
 
@@ -242,8 +259,15 @@ fig6 <- ggplot(param_sweep, aes(x = alpha_A, y = beta)) +
   geom_raster(aes(fill = divergence), interpolate = TRUE) +
   stat_contour(aes(z = divergence), color = "white", linewidth = 0.25,
                alpha = 0.5, bins = 6) +
+  # Section 3 parameters with label
   annotate("point", x = 0.4, y = 0.3,
-           shape = 3, size = 2.5, color = "white", stroke = 1.2) +
+           shape = 3, size = 3, color = "white", stroke = 1.5) +
+  annotate("text", x = 0.4, y = 0.24,
+           label = "Sec. 3", size = 2.2, color = "white", fontface = "bold") +
+  # Region label for maximum divergence
+  annotate("text", x = 0.5, y = 0.15,
+           label = "max divergence", size = 2.0, color = "white",
+           fontface = "italic", alpha = 0.8) +
   scale_fill_viridis(option = "D", name = expression(Delta * italic(V)[B]),
                      guide = guide_colorbar(title.position = "top")) +
   scale_x_continuous(expand = c(0, 0)) +

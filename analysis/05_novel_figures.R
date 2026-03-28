@@ -208,7 +208,7 @@ cat(sprintf("  function determines which model predicts a behavioral response.\n
 
 
 # ============================================================================
-# FIGURE 11: Mechanism Isolation (Section 4.5)
+# FIGURE 11: Mechanism Isolation (Section 4.6)
 # ============================================================================
 # Shows Phase 3 learning under three conditions:
 #   1. Rescorla-Wagner (alpha_B intact)
@@ -265,7 +265,7 @@ fig11 <- ggplot(fig11_data, aes(x = trial, y = V, color = model, linetype = mode
   geom_point(size = 1.0) +
   scale_color_manual(values = c("Rescorla-Wagner" = pal[["blue"]],
                                 "Mackintosh" = pal[["red"]],
-                                "Mack (frozen α)" = pal[["green"]])) +
+                                "Mack (frozen α)" = pal[["cyan"]])) +
   scale_linetype_manual(values = c("Rescorla-Wagner" = "solid",
                                    "Mackintosh" = "dashed",
                                    "Mack (frozen α)" = "dotted")) +
@@ -285,6 +285,6 @@ cat(sprintf("  RW V_B (end Phase 3): %.2f\n", rw_final_vb))
 cat(sprintf("  Mack V_B (end Phase 3): %.2f\n", mack_final_vb))
 cat(sprintf("  Mack frozen-α V_B (end Phase 3): %.2f\n", frozen_final_vb))
 cat("  With attention frozen, Mack learns FASTER than RW — the Phase 3\n")
-cat("  slowing is caused entirely by attention suppression.\n")
+cat("  slowing is attributable primarily to preserved low attention.\n")
 
 cat("\nDone.\n")

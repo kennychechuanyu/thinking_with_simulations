@@ -30,3 +30,7 @@ Thumbs.db
 # Local config
 .local/
 memory/
+.claude/
+
+# Build artifacts from TikZ diagram
+fig1_cycle.pdf
