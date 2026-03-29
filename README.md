@@ -60,6 +60,16 @@ source("analysis/01_blocking.R")
 
 Each analysis script sources `R/models.R` automatically and can be run independently.
 
+### Interactive Shiny App
+
+The companion app lets you manipulate parameters, observation functions, and design choices in real time. From the project root:
+
+```r
+shiny::runApp("shiny_app", launch.browser = TRUE)
+```
+
+The app has four modules: Anticipate (prediction before simulation), Observation Function (mapping sensitivity), Critical Test (competitor comparison with ablation), and Parameter Sweep (structural/parametric evaluation). Requires `shiny` and `bslib`.
+
 ## Expected Runtimes
 
 | Script | Approximate Runtime |
