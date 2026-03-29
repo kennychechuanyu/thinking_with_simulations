@@ -12,6 +12,8 @@ library(viridis)
 
 set.seed(2026)
 
+dir.create("Figures", showWarnings = FALSE)
+
 # --- Colour palette and theme (consistent with figures.R) ---
 pal <- c(blue="#4477AA", cyan="#66CCEE", green="#228833",
          yellow="#CCBB44", red="#EE6677", purple="#AA3377", grey="#BBBBBB")
@@ -258,17 +260,26 @@ mack_vb_p3$model <- "Mackintosh"
 frozen_vb_p3 <- mack_frozen_p3[mack_frozen_p3$cue == "B", c("trial", "V")]
 frozen_vb_p3$model <- "Mack (frozen α)"
 
-fig11_data <- rbind(rw_vb_p3, mack_vb_p3, frozen_vb_p3)
+# --- RW with suppressed alpha (global error + low attention) ---
+rw_suppressed_p3 <- rw_simulate(design_p3,
+                                 alpha = c(A = 0.4, B = alpha_mack[["B"]]),
+                                 beta = 0.3, V_init = V_rw, cue_names = c("A", "B"))
+suppressed_vb_p3 <- rw_suppressed_p3[rw_suppressed_p3$cue == "B", c("trial", "V")]
+suppressed_vb_p3$model <- "RW (suppressed α)"
+
+fig11_data <- rbind(rw_vb_p3, mack_vb_p3, frozen_vb_p3, suppressed_vb_p3)
 
 fig11 <- ggplot(fig11_data, aes(x = trial, y = V, color = model, linetype = model)) +
   geom_line(linewidth = 0.7) +
   geom_point(size = 1.0) +
   scale_color_manual(values = c("Rescorla-Wagner" = pal[["blue"]],
                                 "Mackintosh" = pal[["red"]],
-                                "Mack (frozen α)" = pal[["cyan"]])) +
+                                "Mack (frozen α)" = pal[["cyan"]],
+                                "RW (suppressed α)" = pal[["yellow"]])) +
   scale_linetype_manual(values = c("Rescorla-Wagner" = "solid",
                                    "Mackintosh" = "dashed",
-                                   "Mack (frozen α)" = "dotted")) +
+                                   "Mack (frozen α)" = "dotted",
+                                   "RW (suppressed α)" = "longdash")) +
   scale_y_continuous(limits = c(-0.05, 1.0), breaks = seq(0, 1, 0.2)) +
   labs(x = "Phase 3 Trial", y = expression(italic(V)[B]),
        color = NULL, linetype = NULL) +
@@ -284,7 +295,13 @@ frozen_final_vb <- frozen_vb_p3$V[frozen_vb_p3$trial == max(frozen_vb_p3$trial)]
 cat(sprintf("  RW V_B (end Phase 3): %.2f\n", rw_final_vb))
 cat(sprintf("  Mack V_B (end Phase 3): %.2f\n", mack_final_vb))
 cat(sprintf("  Mack frozen-α V_B (end Phase 3): %.2f\n", frozen_final_vb))
-cat("  With attention frozen, Mack learns FASTER than RW — the Phase 3\n")
-cat("  slowing is attributable primarily to preserved low attention.\n")
+suppressed_final_vb <- suppressed_vb_p3$V[suppressed_vb_p3$trial == max(suppressed_vb_p3$trial)]
+cat(sprintf("  RW suppressed-α V_B (end Phase 3): %.2f\n", suppressed_final_vb))
+cat("\n  2x2 ablation summary:\n")
+cat("                    Fixed α    Suppressed α\n")
+cat(sprintf("  Global error (RW): %.2f       %.2f\n", rw_final_vb, suppressed_final_vb))
+cat(sprintf("  Local error (Mack): %.2f       %.2f\n", frozen_final_vb, mack_final_vb))
+cat("  Local error accelerates; suppressed attention decelerates.\n")
+cat("  Full Mackintosh (0.42) reflects partial cancellation.\n")
 
 cat("\nDone.\n")

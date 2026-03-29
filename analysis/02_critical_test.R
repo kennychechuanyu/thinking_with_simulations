@@ -2,7 +2,7 @@
 # Section 3 — Model Comparison and Critical Test Design
 # ============================================================================
 # Runtime: < 1 second
-# Figures produced: fig4_critical_test, fig5_alpha_dynamics
+# Data used by: figures.R (fig4_critical_test, fig5_alpha_dynamics)
 # ============================================================================
 
 source("R/models.R")

@@ -2,7 +2,7 @@
 # Section 5 — Virtual Experiment and Power Analysis
 # ============================================================================
 # Runtime: ~2-5 minutes (Monte Carlo simulations)
-# Figures produced: fig8_power_curve
+# Data used by: figures.R (fig8_power_curve)
 # ============================================================================
 
 source("R/models.R")

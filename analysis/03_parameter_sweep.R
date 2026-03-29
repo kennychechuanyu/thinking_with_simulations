@@ -2,7 +2,7 @@
 # Section 4 — Parameter and Design Sweeps
 # ============================================================================
 # Runtime: ~5-10 seconds
-# Figures produced: fig6_param_sweep, fig7_design_sweep
+# Data used by: figures.R (fig6_param_sweep, fig7_design_sweep)
 # ============================================================================
 
 source("R/models.R")
@@ -62,8 +62,11 @@ cat(sprintf("  Max divergence:  %.4f  (at α_A=%.2f, β=%.2f)\n",
     param_sweep$beta[which.max(param_sweep$divergence)]))
 cat(sprintf("  Min divergence:  %.4f\n", min(param_sweep$divergence)))
 cat(sprintf("  Divergence at α_A=0.4, β=0.3:  %.4f\n",
-    param_sweep$divergence[param_sweep$alpha_A == 0.4 & param_sweep$beta == 0.3]))
-cat("  Note: divergence depends primarily on β, not α_A!\n\n")
+    with(param_sweep,
+         divergence[abs(alpha_A - 0.4) < 1e-9 & abs(beta - 0.3) < 1e-9])))
+cat(sprintf("  Divergence > 0.05 in %.1f%% of the grid.\n",
+    100 * mean(param_sweep$divergence > 0.05)))
+cat("  Note: under this zero-generalization endpoint metric, divergence is invariant across α_A and depends only on β.\n\n")
 
 
 # === Simulation 6: Design Parameter Sweep ====================================
@@ -115,7 +118,7 @@ cat(sprintf("  Max divergence:  %.4f  (at n_P1=%d, n_P2=%d)\n",
     max(design_sweep$divergence),
     design_sweep$n_p1[which.max(design_sweep$divergence)],
     design_sweep$n_p2[which.max(design_sweep$divergence)]))
-cat("  Note: divergence depends primarily on n_P2 (more compound trials = more α suppression).\n\n")
+cat("  Note: with V_B reset and Phase 3 fixed, the endpoint is invariant across n_P1; n_P2 alone drives the landscape by controlling how much α_B is suppressed.\n\n")
 
 
 # === TRY THIS exercises =====================================================

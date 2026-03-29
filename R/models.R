@@ -319,8 +319,15 @@ obs_threshold <- function(V, theta = 0.5) {
 #   V   — named vector of associative strengths for each option
 #   phi — sensitivity parameter (higher = more deterministic)
 obs_luce <- function(V, phi = 3) {
+  # Softmax across provided alternatives (A vs B choice)
   exp_vals <- exp(phi * V)
   exp_vals / sum(exp_vals)
+}
+
+obs_luce_respond <- function(V, phi = 3) {
+  # P(respond | cue) vs no-response baseline (V=0)
+  # This matches the paper's Table definition
+  exp(phi * V) / (exp(phi * V) + 1)
 }
 
 

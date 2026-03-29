@@ -50,7 +50,7 @@ generate_vb <- function(model, s_i) {
                            alpha_init = state$alpha,
                            V_init = state$V)$V[["B"]]
   }
-  return(vb + rnorm(1, 0, noise_sd))
+  return(vb)  # clean V_B; noise added by caller
 }
 
 # === Helper: compute reference predictions for a given rate ===============
@@ -100,7 +100,7 @@ for (sim in seq_len(n_sims * 2)) {
   vb_obs <- numeric(n_subj)
   for (i in seq_len(n_subj)) {
     s_i <- rbeta(1, 3, 7)
-    vb_obs[i] <- generate_vb(gen_model, s_i)
+    vb_obs[i] <- generate_vb(gen_model, s_i) + rnorm(1, 0, noise_sd)
   }
 
   # Compare SSE
@@ -134,6 +134,31 @@ cat(sprintf("    Correctly identified as Mack: %.1f%%\n", mack_correct * 100))
 cat(sprintf("    Misidentified as RW:          %.1f%%\n", (1 - mack_correct) * 100))
 cat(sprintf("\n  Overall recovery rate: %.1f%%\n",
     (rw_correct + mack_correct) / 2 * 100))
+
+# === Recovery across noise levels ==========================================
+cat("\n=== Recovery vs. Noise Level ===\n")
+noise_levels <- c(0.5, 1.0, 2.0, 3.0, 5.0)
+n_sims_noise <- 100
+
+for (noise in noise_levels) {
+  correct <- 0L
+  total <- 0L
+  for (gen in c("RW", "Mack")) {
+    for (sim in seq_len(n_sims_noise)) {
+      vb_obs <- numeric(n_subj)
+      for (i in seq_len(n_subj)) {
+        s_i <- rbeta(1, 3, 7)
+        vb_obs[i] <- generate_vb(gen, s_i) + rnorm(1, 0, noise)
+      }
+      sse_rw   <- sum((vb_obs - ref_rw)^2)
+      sse_mack <- sum((vb_obs - ref_mack)^2)
+      selected <- ifelse(sse_rw < sse_mack, "RW", "Mack")
+      if (selected == gen) correct <- correct + 1L
+      total <- total + 1L
+    }
+  }
+  cat(sprintf("  sigma = %.1f: recovery = %.1f%%\n", noise, 100 * correct / total))
+}
 
 cat("\n  Note: This uses a simplified SSE comparison at the mean rate.\n")
 cat("  A full analysis would optimize rate per participant and use\n")

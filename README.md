@@ -1,8 +1,8 @@
-# Thinking With Models Through Simulation: A Methodological Tutorial
+# Thinking With Models Through Simulation
 
-Companion code and materials for the tutorial paper:
+Companion code and materials for the paper:
 
-> Yu, K. (2026). Thinking With Models Through Simulation: A Methodological Tutorial. *Manuscript in preparation.*
+> Yu, K. (2026). Thinking With Models Through Simulation. *Manuscript in preparation.*
 
 ## Overview
 
@@ -16,6 +16,8 @@ This methodological tutorial articulates the Simulation Thinking Cycle, a six-st
 
 - **R >= 4.0** (base R only for core analyses)
 - **ggplot2** and **viridis** (for figure generation)
+- **patchwork** or **gridExtra** (for multi-panel robustness figures)
+- **shiny** and **bslib** (for the interactive companion app)
 
 ## File Organization
 
@@ -36,6 +38,9 @@ analysis/
 
 figures.R                   Generate all manuscript figures
 run_all.R                   Reproduce everything in one command
+
+shiny_app/
+  app.R                     Interactive companion app (4 modules)
 
 Figures/                    All figures (PNG)
 ```

@@ -129,11 +129,11 @@ cat(sprintf("  Completed %d combinations in %.1f seconds.\n\n",
     nrow(obs_sweep), as.numeric(t1 - t0, units = "secs")))
 
 # --- Checkpoint ---
-cat("  Raw V:      max divergence = %.4f\n" |> sprintf(max(obs_sweep$div_raw)))
-cat("  Sigmoid:    max divergence = %.4f\n" |> sprintf(max(obs_sweep$div_sigmoid)))
-cat("  Threshold:  %d of %d combos show qualitative disagreement (%.0f%%)\n\n" |>
-    sprintf(sum(obs_sweep$div_threshold > 0), nrow(obs_sweep),
-            100 * mean(obs_sweep$div_threshold > 0)))
+cat(sprintf("  Raw V:      max divergence = %.4f\n", max(obs_sweep$div_raw)))
+cat(sprintf("  Sigmoid:    max divergence = %.4f\n", max(obs_sweep$div_sigmoid)))
+cat(sprintf("  Threshold:  %d of %d combos show qualitative disagreement (%.0f%%)\n\n",
+    sum(obs_sweep$div_threshold > 0), nrow(obs_sweep),
+    100 * mean(obs_sweep$div_threshold > 0)))
 
 
 # --- Figure 12: 3-panel heatmap ---
@@ -230,7 +230,7 @@ cat("\n  Reset sensitivity results:\n")
 print(reset_results)
 cat(sprintf("\n  Divergence range: %.4f to %.4f\n",
     min(reset_results$divergence), max(reset_results$divergence)))
-cat("  Key finding: divergence is robust even with partial generalization.\n\n")
+cat("  Key finding: divergence shrinks monotonically as generalization increases; the qualitative ordering persists until the curves nearly meet at g = 1.\n\n")
 
 
 # --- Figure 13: Line plot ---

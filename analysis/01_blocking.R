@@ -2,7 +2,7 @@
 # Section 2 — Blocking and Overexpectation
 # ============================================================================
 # Runtime: < 1 second
-# Figures produced: fig2_blocking, fig3_overexpectation
+# Data used by: figures.R (fig2_blocking, fig3_overexpectation)
 # ============================================================================
 
 source("R/models.R")
@@ -26,19 +26,17 @@ blocking_rw <- rw_simulate(
 )
 
 # --- Expected Output Checkpoint ----------------------------------------------
+# NOTE: rw_simulate records pre-trial values. trial==N is the state BEFORE
+# the Nth update. The terminal row (trial==N+1) holds the post-final-update state.
+# Use extract_final_V() for end-of-phase values.
 cat("=== Blocking: Key Values ===\n")
 b <- blocking_rw
-cat(sprintf("  V_A after Phase 1, trial 5:   %.4f\n",
-    b$V[b$cue == "A" & b$trial == 5]))
-cat(sprintf("  V_A after Phase 1, trial 10:  %.4f\n",
-    b$V[b$cue == "A" & b$trial == 10]))
-cat(sprintf("  V_B at start of Phase 2:      %.4f\n",
-    b$V[b$cue == "B" & b$trial == 11]))
-cat(sprintf("  V_B after Phase 2, trial 20:  %.4f\n",
-    b$V[b$cue == "B" & b$trial == 20]))
-cat(sprintf("  V_A after Phase 2, trial 20:  %.4f\n",
-    b$V[b$cue == "A" & b$trial == 20]))
-# Expected: V_A ~ 0.72 at end of Phase 1; V_B ~ 0.13 at end of Phase 2
+V_final <- extract_final_V(blocking_rw)
+cat(sprintf("  V_A end of Phase 1 (10 trials): %.4f\n",
+    rw_final(blocking_design[1:10], alpha=c(A=0.4, B=0.4), beta=0.3)[["A"]]))
+cat(sprintf("  V_A end of Phase 2 (20 trials): %.4f\n", V_final[["A"]]))
+cat(sprintf("  V_B end of Phase 2 (20 trials): %.4f\n", V_final[["B"]]))
+# Expected: V_A ~ 0.72 after Phase 1; V_A ~ 0.85, V_B ~ 0.13 after Phase 2
 
 # --- Hand Trace (first 3 trials + first compound trial) ----------------------
 cat("\n")
@@ -57,9 +55,8 @@ cat(sprintf("  Sigmoid:     P(CR|A) = %.3f, P(CR|B) = %.3f\n",
     obs_sigmoid(V_A_final), obs_sigmoid(V_B_final)))
 cat(sprintf("  Threshold:   P(CR|A) = %.0f, P(CR|B) = %.0f\n",
     obs_threshold(V_A_final, theta = 0.5), obs_threshold(V_B_final, theta = 0.5)))
-cat(sprintf("  Luce choice: P(A) = %.3f, P(B) = %.3f\n",
-    obs_luce(c(A = V_A_final, B = V_B_final))["A"],
-    obs_luce(c(A = V_A_final, B = V_B_final))["B"]))
+cat(sprintf("  Luce choice (respond vs no-response): P(resp|A) = %.2f, P(resp|B) = %.2f\n",
+    obs_luce_respond(V_A_final), obs_luce_respond(V_B_final)))
 
 
 # === Simulation 2: Overexpectation ==========================================
@@ -83,15 +80,17 @@ overexpectation_rw <- rw_simulate(
 # --- Expected Output Checkpoint ----------------------------------------------
 cat("\n=== Overexpectation: Key Values ===\n")
 oe <- overexpectation_rw
-phase1_end <- max(oe$trial[oe$phase == "Phase 1"])
+phase1_final <- rw_final(overexpectation_design[1:20],
+                         alpha = c(A = 0.4, B = 0.4), beta = 0.3)
+phase2_final <- extract_final_V(overexpectation_rw)
 cat(sprintf("  V_A at end of Phase 1: %.4f\n",
-    oe$V[oe$cue == "A" & oe$trial == phase1_end]))
+    phase1_final[["A"]]))
 cat(sprintf("  V_B at end of Phase 1: %.4f\n",
-    oe$V[oe$cue == "B" & oe$trial == phase1_end]))
+    phase1_final[["B"]]))
 cat(sprintf("  V_A at end of Phase 2: %.4f\n",
-    oe$V[oe$cue == "A" & oe$trial == max(oe$trial)]))
+    phase2_final[["A"]]))
 cat(sprintf("  V_B at end of Phase 2: %.4f\n",
-    oe$V[oe$cue == "B" & oe$trial == max(oe$trial)]))
+    phase2_final[["B"]]))
 # Expected: V_A and V_B ~ 0.72 after Phase 1 (10 trials each); both DECLINE in Phase 2
 
 
