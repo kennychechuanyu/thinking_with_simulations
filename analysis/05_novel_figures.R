@@ -201,12 +201,10 @@ save_fig(fig10, "fig10_obs_function_impact", width = 5.5, height = 3.5)
 cat("\n=== Key Values for Manuscript ===\n")
 rw_vb_end <- rw_res$V[rw_res$cue == "B" & rw_res$trial == max(rw_res$trial)]
 mack_vb_end <- mack_res$V[mack_res$cue == "B" & mack_res$trial == max(mack_res$trial)]
-cat(sprintf("  RW V_B at end of Phase 2: %.3f (below threshold %.1f → no response)\n",
+cat(sprintf("  RW V_B end Phase 2:   %.3f (threshold %.1f)\n",
     rw_vb_end, threshold))
-cat(sprintf("  Mack V_B at end of Phase 2: %.3f (above threshold %.1f → responds)\n",
+cat(sprintf("  Mack V_B end Phase 2: %.3f (threshold %.1f)\n",
     mack_vb_end, threshold))
-cat(sprintf("  Same models, same design, same 'blocking' — but the observation\n"))
-cat(sprintf("  function determines which model predicts a behavioral response.\n"))
 
 
 # ============================================================================
@@ -301,7 +299,5 @@ cat("\n  2x2 ablation summary:\n")
 cat("                    Fixed α    Suppressed α\n")
 cat(sprintf("  Global error (RW): %.2f       %.2f\n", rw_final_vb, suppressed_final_vb))
 cat(sprintf("  Local error (Mack): %.2f       %.2f\n", frozen_final_vb, mack_final_vb))
-cat("  Local error accelerates; suppressed attention decelerates.\n")
-cat("  Full Mackintosh (0.42) reflects partial cancellation.\n")
 
 cat("\nDone.\n")

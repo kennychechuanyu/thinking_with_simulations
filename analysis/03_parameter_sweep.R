@@ -10,7 +10,6 @@ source("R/models.R")
 set.seed(2026)
 
 cat("=== Parameter Sensitivity Sweep ===\n")
-cat("Sweeping α_A × β, measuring |V_B(RW) - V_B(Mack)| at end of Phase 3...\n")
 
 t0 <- Sys.time()
 
@@ -66,14 +65,13 @@ cat(sprintf("  Divergence at α_A=0.4, β=0.3:  %.4f\n",
          divergence[abs(alpha_A - 0.4) < 1e-9 & abs(beta - 0.3) < 1e-9])))
 cat(sprintf("  Divergence > 0.05 in %.1f%% of the grid.\n",
     100 * mean(param_sweep$divergence > 0.05)))
-cat("  Note: under this zero-generalization endpoint metric, divergence is invariant across α_A and depends only on β.\n\n")
+cat("\n")
 
 
 # === Simulation 6: Design Parameter Sweep ====================================
 # Sweep Phase 1 and Phase 2 trial counts; Phase 3 fixed at 20
 
 cat("=== Design Parameter Sweep ===\n")
-cat("Sweeping n_P1 × n_P2 (Phase 3 fixed at 20 trials)...\n")
 
 t0 <- Sys.time()
 
@@ -118,14 +116,10 @@ cat(sprintf("  Max divergence:  %.4f  (at n_P1=%d, n_P2=%d)\n",
     max(design_sweep$divergence),
     design_sweep$n_p1[which.max(design_sweep$divergence)],
     design_sweep$n_p2[which.max(design_sweep$divergence)]))
-cat("  Note: with V_B reset and Phase 3 fixed, the endpoint is invariant across n_P1; n_P2 alone drives the landscape by controlling how much α_B is suppressed.\n\n")
+cat("\n")
 
 
 # === TRY THIS exercises =====================================================
 cat("=== Try This Exercises ===\n")
 cat("1. Add Phase 3 trial count as a third swept dimension.\n")
-cat("   Does the optimal Phase 3 length depend on Phase 2 length?\n\n")
-cat("2. Use a different divergence metric: instead of |V_B(RW) - V_B(Mack)|,\n")
-cat("   compute the ratio V_B(Mack) / V_B(RW). Does the landscape change?\n\n")
-
-cat("Done. Run this script with: source('analysis/03_parameter_sweep.R')\n")
+cat("2. Use ratio V_B(Mack)/V_B(RW) instead of absolute difference.\n\n")

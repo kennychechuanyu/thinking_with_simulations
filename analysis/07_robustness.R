@@ -76,7 +76,6 @@ save_fig <- function(p, name, width = 5, height = 3.5) {
 #   3. Threshold: I(V_B(RW) > 0.3) != I(V_B(Mack) > 0.3)  (qualitative)
 
 cat("=== Analysis A: Observation Function Sensitivity ===\n")
-cat("Sweeping alpha_A x beta under three observation functions...\n")
 
 t0 <- Sys.time()
 
@@ -230,7 +229,7 @@ cat("\n  Reset sensitivity results:\n")
 print(reset_results)
 cat(sprintf("\n  Divergence range: %.4f to %.4f\n",
     min(reset_results$divergence), max(reset_results$divergence)))
-cat("  Key finding: divergence shrinks monotonically as generalization increases; the qualitative ordering persists until the curves nearly meet at g = 1.\n\n")
+cat("\n")
 
 
 # --- Figure 13: Line plot ---
@@ -367,8 +366,7 @@ cat(sprintf("  Metric 3 — Learning rate proxy:\n"))
 cat(sprintf("    RW   slope (first 5 trials) = %.4f per trial\n", slope_rw))
 cat(sprintf("    Mack slope (first 5 trials) = %.4f per trial\n", slope_mack))
 cat(sprintf("    Ratio of slopes (Mack/RW)   = %.4f\n", slope_mack / slope_rw))
-cat("\n  All three metrics agree: RW learns faster than Mackintosh in Phase 3.\n")
-cat("  The qualitative conclusion is robust to metric choice.\n\n")
+cat("\n")
 
 
 # ============================================================================
@@ -377,7 +375,6 @@ cat("  The qualitative conclusion is robust to metric choice.\n\n")
 # Fix alpha_A=0.4, beta=0.3. Sweep beta_up and beta_down.
 
 cat("=== Analysis D: Mackintosh Attention Parameter Sensitivity ===\n")
-cat("Sweeping beta_up x beta_down...\n")
 
 t0 <- Sys.time()
 
@@ -439,7 +436,7 @@ cat(sprintf("  Min divergence:  %.4f  (beta_up=%.2f, beta_down=%.2f)\n",
     attn_sweep$beta_up[which.min(attn_sweep$divergence)],
     attn_sweep$beta_down[which.min(attn_sweep$divergence)]))
 cat(sprintf("  RW V_B (constant): %.4f\n", vb_rw_D))
-cat("  Divergence is larger when beta_down is high (more α suppression in Phase 2).\n\n")
+cat("\n")
 
 
 # --- Figure 14: Heatmap ---
@@ -469,17 +466,7 @@ save_fig(fig14, "fig14_robustness_attention", width = 5, height = 4)
 # ============================================================================
 
 cat("\n=== Robustness Check Summary ===\n")
-cat("A. Observation function: The parameter region where models diverge shifts\n")
-cat("   depending on the observation function. Under raw V and sigmoid, divergence\n")
-cat("   spans a broad region. Under threshold mapping, qualitative disagreement\n")
-cat("   depends on the threshold value and may be compressed or expanded.\n")
-cat("B. V_B reset: The qualitative ordering (RW > Mack in Phase 3) persists across\n")
-cat("   the tested range of generalization values, but divergence magnitude decreases\n")
-cat("   as generalization increases.\n")
-cat("C. Divergence metric: All three metrics (absolute, ratio, learning slope)\n")
-cat("   agree qualitatively that RW learns faster in Phase 3.\n")
-cat("D. Attention parameters: Divergence increases with beta_down (stronger\n")
-cat("   attention suppression). The critical test works across all tested\n")
-cat("   beta_up x beta_down combinations.\n")
-
-cat("\nDone. Run this script with: source('analysis/07_robustness.R')\n")
+cat("A. Observation function: divergence region shifts with obs function choice.\n")
+cat("B. V_B reset: RW > Mack ordering persists; magnitude decreases with generalization.\n")
+cat("C. Divergence metric: absolute, ratio, and slope metrics agree qualitatively.\n")
+cat("D. Attention parameters: divergence increases with beta_down.\n")

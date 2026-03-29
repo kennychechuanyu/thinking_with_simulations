@@ -39,9 +39,7 @@ mc_vb  <- comparison_mack$V[comparison_mack$cue == "B" & comparison_mack$trial =
 mc_alb <- comparison_mack$alpha[comparison_mack$cue == "B" & comparison_mack$trial == max(comparison_mack$trial)]
 cat(sprintf("  RW  — V_B at end of Phase 2:   %.4f\n", rw_vb))
 cat(sprintf("  Mack — V_B at end of Phase 2:  %.4f\n", mc_vb))
-cat(sprintf("  Mack — α_B at end of Phase 2:  %.4f\n", mc_alb))
-cat("  Note: Both produce 'blocking' but through different mechanisms!\n")
-cat("  RW keeps V_B low (error consumed). Mack lets V_B rise but suppresses α_B.\n\n")
+cat(sprintf("  Mack — α_B at end of Phase 2:  %.4f\n\n", mc_alb))
 
 
 # === Critical Test: Three-Phase Design =======================================
@@ -81,17 +79,17 @@ critical_mack <- combine_phases(mack_p12, mack_p3)
 
 # --- Expected Output Checkpoint: Phase 3 boundary state ---
 cat("=== Critical Test: State at Phase 2/3 Boundary ===\n")
-cat(sprintf("  RW:   V_B → 0 (reset),  α_B = %.2f (intact — α is fixed in RW)\n",
+cat(sprintf("  RW:   V_B → 0 (reset),  α_B = %.2f (fixed)\n",
     0.4))
-cat(sprintf("  Mack: V_B → 0 (reset),  α_B = %.4f (SUPPRESSED during Phase 2)\n",
+cat(sprintf("  Mack: V_B → 0 (reset),  α_B = %.4f (suppressed)\n",
     alpha_mack["B"]))
 
 # Phase 3 endpoints
 rw_vb_p3   <- critical_rw$V[critical_rw$cue == "B" & critical_rw$trial == max(critical_rw$trial)]
 mack_vb_p3 <- critical_mack$V[critical_mack$cue == "B" & critical_mack$trial == max(critical_mack$trial)]
 cat(sprintf("\n  After Phase 3 (10 trials of B → new outcome):\n"))
-cat(sprintf("    RW   V_B = %.4f  (fast learning — α_B intact)\n", rw_vb_p3))
-cat(sprintf("    Mack V_B = %.4f  (slow learning — α_B suppressed)\n", mack_vb_p3))
+cat(sprintf("    RW   V_B = %.4f\n", rw_vb_p3))
+cat(sprintf("    Mack V_B = %.4f\n", mack_vb_p3))
 cat(sprintf("    Divergence = %.4f\n\n", abs(rw_vb_p3 - mack_vb_p3)))
 
 
@@ -110,10 +108,5 @@ for (t in checkpoints) {
 # === TRY THIS exercises =====================================================
 cat("\n=== Try This Exercises ===\n")
 cat("1. Change Phase 3 to 50 trials instead of 10.\n")
-cat("   Do the models eventually converge?\n\n")
-cat("2. In the Mackintosh model, set beta_up = beta_down = 0.10.\n")
-cat("   How does symmetric attention change the Phase 3 prediction?\n\n")
-cat("3. What happens if you skip Phase 1 entirely (just AB+ then B→new)?\n")
-cat("   Is blocking necessary for the Phase 3 divergence?\n\n")
-
-cat("Done. Run this script with: source('analysis/02_critical_test.R')\n")
+cat("2. Set beta_up = beta_down = 0.10 in Mackintosh.\n")
+cat("3. Skip Phase 1 entirely (just AB+ then B→new).\n\n")

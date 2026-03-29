@@ -251,7 +251,7 @@ save_fig(fig5, "fig5_alpha_dynamics")
 # ============================================================================
 # FIGURE 6: Parameter Sensitivity Heatmap (Section 4.2)
 # ============================================================================
-cat("Generating Figure 6: Parameter sweep (this takes a few seconds)...\n")
+cat("Generating Figure 6: Parameter sweep...\n")
 
 source("analysis/03_parameter_sweep.R")
 
@@ -302,7 +302,7 @@ save_fig(fig7, "fig7_design_sweep", width = 4.5, height = 3.8)
 # ============================================================================
 # FIGURE 8: Power Curve (Section 5.2)
 # ============================================================================
-cat("Generating Figure 8: Power curve (this takes a few minutes)...\n")
+cat("Generating Figure 8: Power curve...\n")
 
 source("analysis/04_virtual_experiment.R")
 

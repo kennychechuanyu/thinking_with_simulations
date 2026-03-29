@@ -20,9 +20,7 @@ source("R/models.R")
 
 set.seed(2026)
 
-cat("=== Model Recovery Analysis ===\n")
-cat("Generating synthetic data from each model,\n")
-cat("fitting both models, and checking recovery.\n\n")
+cat("=== Model Recovery Analysis ===\n\n")
 
 # === Design ================================================================
 
@@ -160,8 +158,3 @@ for (noise in noise_levels) {
   cat(sprintf("  sigma = %.1f: recovery = %.1f%%\n", noise, 100 * correct / total))
 }
 
-cat("\n  Note: This uses a simplified SSE comparison at the mean rate.\n")
-cat("  A full analysis would optimize rate per participant and use\n")
-cat("  BIC or Bayes factors for model selection.\n")
-
-cat("\nDone. Run this script with: source('analysis/08_model_recovery.R')\n")

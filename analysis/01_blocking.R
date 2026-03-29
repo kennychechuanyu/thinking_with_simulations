@@ -55,7 +55,7 @@ cat(sprintf("  Sigmoid:     P(CR|A) = %.3f, P(CR|B) = %.3f\n",
     obs_sigmoid(V_A_final), obs_sigmoid(V_B_final)))
 cat(sprintf("  Threshold:   P(CR|A) = %.0f, P(CR|B) = %.0f\n",
     obs_threshold(V_A_final, theta = 0.5), obs_threshold(V_B_final, theta = 0.5)))
-cat(sprintf("  Luce choice (respond vs no-response): P(resp|A) = %.2f, P(resp|B) = %.2f\n",
+cat(sprintf("  Luce choice: P(resp|A) = %.2f, P(resp|B) = %.2f\n",
     obs_luce_respond(V_A_final), obs_luce_respond(V_B_final)))
 
 
@@ -98,12 +98,6 @@ cat(sprintf("  V_B at end of Phase 2: %.4f\n",
 
 cat("\n=== Try This Exercises ===\n")
 cat("1. Change alpha to c(A=0.9, B=0.9) and rerun blocking.\n")
-cat("   Does blocking still occur? Is it stronger or weaker?\n\n")
-cat("2. What if beta=0? (No learning at all)\n")
-cat("   What if beta=1? (Maximum learning rate)\n\n")
-cat("3. Reverse the phase order: AB+ first (10 trials), then A+ (10 trials).\n")
-cat("   What happens to V_B?\n\n")
-cat("4. In overexpectation, train A for 20 trials but B for only 5.\n")
-cat("   Do they decline equally in Phase 2?\n\n")
-
-cat("Done. Run this script with: source('analysis/01_blocking.R')\n")
+cat("2. What if beta=0? What if beta=1?\n")
+cat("3. Reverse phase order: AB+ first (10 trials), then A+ (10 trials).\n")
+cat("4. In overexpectation, train A for 20 trials but B for only 5.\n\n")

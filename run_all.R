@@ -5,30 +5,29 @@
 
 cat("=== Thinking With Simulations: Full Reproduction ===\n\n")
 
-cat("Section 2: Blocking and Overexpectation...\n")
+cat("01_blocking.R\n")
 source("analysis/01_blocking.R")
 
-cat("\nSection 3: Model Comparison and Critical Test...\n")
+cat("\n02_critical_test.R\n")
 source("analysis/02_critical_test.R")
 
-cat("\nSection 4: Parameter and Design Sweeps...\n")
+cat("\n03_parameter_sweep.R\n")
 source("analysis/03_parameter_sweep.R")
 
-cat("\nSection 5: Virtual Experiment and Power Analysis...\n")
+cat("\n04_virtual_experiment.R\n")
 source("analysis/04_virtual_experiment.R")
 
-cat("\nSections 3-4: Novel Figures (overexpectation sweep, obs function, mechanism isolation)...\n")
+cat("\n05_novel_figures.R\n")
 source("analysis/05_novel_figures.R")
 
-cat("\nSection 4.7: Robustness of the Critical Test...\n")
+cat("\n07_robustness.R\n")
 source("analysis/07_robustness.R")
 
-cat("\nSection 5 Extension: Model Recovery Analysis...\n")
+cat("\n08_model_recovery.R\n")
 source("analysis/08_model_recovery.R")
 
-cat("\nGenerating all figures...\n")
+cat("\nfigures.R\n")
 source("figures.R")
 
 cat("\n=== All analyses and figures complete. ===\n")
-cat("Session info:\n")
 print(sessionInfo())

@@ -10,7 +10,7 @@ source("R/models.R")
 set.seed(2026)
 
 cat("=== Virtual Experiment: Power Analysis ===\n")
-cat("This section is computationally intensive. Estimated runtime: 2-5 minutes.\n\n")
+cat("Runtime: ~2-5 minutes.\n\n")
 
 
 # === Reference prediction under RW ==========================================
@@ -25,9 +25,7 @@ V_rw_pow["B"] <- 0
 vb_rw_ref <- rw_final(power_p3, alpha = c(A = 0.4, B = 0.4), beta = 0.3,
                        V_init = V_rw_pow)[["B"]]
 
-cat(sprintf("  RW reference V_B (end of Phase 3): %.4f\n", vb_rw_ref))
-cat("  This is the value we'd expect if RW were correct.\n")
-cat("  If Mackintosh is true, observed V_B should be LOWER.\n\n")
+cat(sprintf("  RW reference V_B (end of Phase 3): %.4f\n\n", vb_rw_ref))
 
 
 # === Generative Model ========================================================
@@ -90,8 +88,6 @@ cat("\n=== Power Analysis Results ===\n")
 print(power_results)
 
 # --- Expected Output Checkpoint ----------------------------------------------
-cat("\n  Expected: Power crosses 80% around N = 30-50.\n")
-cat("  Exact values depend on random seed.\n")
 
 # Monte Carlo SE for each estimate
 cat("\n=== Monte Carlo Precision ===\n")
@@ -106,8 +102,7 @@ for (j in seq_along(sample_sizes)) {
 # === Monte Carlo Convergence Illustration ====================================
 # Show how the power estimate stabilizes as n_sim increases
 
-cat("\n=== Monte Carlo Convergence (N = 30 participants) ===\n")
-cat("Running 2000 simulations to show convergence...\n")
+cat("\n=== Monte Carlo Convergence (N = 30, 2000 sims) ===\n")
 
 mc_n_subj  <- 30
 mc_n_total <- 2000
@@ -155,10 +150,6 @@ print(mc_convergence)
 
 # === TRY THIS exercises =====================================================
 cat("\n=== Try This Exercises ===\n")
-cat("1. Increase noise from sigma=1.0 to sigma=3.0.\n")
-cat("   What happens to the required sample size for 80% power?\n\n")
-cat("2. Change the individual-differences distribution from Beta(3,7)\n")
-cat("   to Beta(2,8) [more skewed]. Does power change much?\n\n")
-cat("3. Change Phase 3 from 10 to 5 trials. Does the effect shrink?\n\n")
-
-cat("Done. Run this script with: source('analysis/04_virtual_experiment.R')\n")
+cat("1. Increase noise to sigma=3.0.\n")
+cat("2. Change individual-differences distribution to Beta(2,8).\n")
+cat("3. Change Phase 3 from 10 to 5 trials.\n\n")
