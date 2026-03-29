@@ -1,6 +1,5 @@
 # Thinking With Simulations — Run All Analyses
 # This script reproduces all simulation results and figures.
-# Expected total runtime: ~5-8 minutes
 # Requirements: R >= 4.0, ggplot2, viridis
 
 cat("=== Thinking With Simulations: Full Reproduction ===\n\n")

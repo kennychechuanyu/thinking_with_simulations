@@ -70,20 +70,6 @@ shiny::runApp("shiny_app", launch.browser = TRUE)
 
 The app has four modules: Anticipate (prediction before simulation), Observation Function (mapping sensitivity), Critical Test (competitor comparison with ablation), and Parameter Sweep (structural/parametric evaluation). Requires `shiny` and `bslib`.
 
-## Expected Runtimes
-
-| Script | Approximate Runtime |
-|--------|---------------------|
-| `analysis/01_blocking.R` | < 1 second |
-| `analysis/02_critical_test.R` | < 1 second |
-| `analysis/03_parameter_sweep.R` | ~10 seconds |
-| `analysis/04_virtual_experiment.R` | ~3-5 minutes |
-| `analysis/05_novel_figures.R` | ~10 seconds |
-| `analysis/07_robustness.R` | ~10 seconds |
-| `analysis/08_model_recovery.R` | ~2-5 minutes |
-| `figures.R` | ~5 minutes |
-| **Total (`run_all.R`)** | **~5-8 minutes** |
-
 ## Reproducibility
 
 All scripts use `set.seed(2026)` for reproducible results.
