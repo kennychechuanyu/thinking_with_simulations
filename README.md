@@ -31,10 +31,11 @@ analysis/
   02_critical_test.R        Section 3: Model comparison and critical test design
   03_parameter_sweep.R      Section 4: Parameter and design sensitivity
   04_virtual_experiment.R   Section 5: Virtual experiment and power analysis
-  05_novel_figures.R        Figures 9-11: Overexpectation sweep, observation
-                              function impact, mechanism isolation
+  05_novel_figures.R        Novel analysis figures (overexpectation sweep,
+                              observation function impact, mechanism isolation)
   07_robustness.R           Section 4.7: Robustness checks for the critical test
   08_model_recovery.R       Section 5 extension: Simplified model recovery analysis
+  S1_ddm_demonstration.R    Supplementary S1: DDM transfer demonstration
 
 figures.R                   Generate all manuscript figures
 run_all.R                   Reproduce everything in one command
@@ -42,7 +43,14 @@ run_all.R                   Reproduce everything in one command
 shiny_app/
   app.R                     Interactive companion app (4 modules)
 
-Figures/                    All figures (PNG)
+Figures/                    All figures (PDF and PNG)
+
+main.tex / main.pdf         Manuscript source and compiled PDF
+supplementary.tex / supplementary.pdf
+                            Supplementary materials (DDM transfer
+                            demonstration, robustness tables, model
+                            recovery analysis)
+references.bib              Bibliography
 ```
 
 ## How to Run

@@ -16,14 +16,14 @@ source("analysis/03_parameter_sweep.R")
 cat("\n04_virtual_experiment.R\n")
 source("analysis/04_virtual_experiment.R")
 
-cat("\n05_novel_figures.R\n")
-source("analysis/05_novel_figures.R")
-
 cat("\n07_robustness.R\n")
 source("analysis/07_robustness.R")
 
 cat("\n08_model_recovery.R\n")
 source("analysis/08_model_recovery.R")
+
+cat("\nS1_ddm_demonstration.R\n")
+source("analysis/S1_ddm_demonstration.R")
 
 cat("\nfigures.R\n")
 source("figures.R")

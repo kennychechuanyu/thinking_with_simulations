@@ -104,10 +104,10 @@ unequal_design <- c(
 )
 
 unequal <- rw_simulate(unequal_design, alpha = c(A = 0.4, B = 0.4), beta = 0.3)
+phase1_final <- rw_final(unequal_design[1:25], alpha = c(A = 0.4, B = 0.4), beta = 0.3)
 
-phase1_end <- 25  # 20 + 5
-va_p1 <- unequal$V[unequal$cue == "A" & unequal$trial == phase1_end]
-vb_p1 <- unequal$V[unequal$cue == "B" & unequal$trial == phase1_end]
+va_p1 <- phase1_final[["A"]]
+vb_p1 <- phase1_final[["B"]]
 va_end <- unequal$V[unequal$cue == "A" & unequal$trial == max(unequal$trial)]
 vb_end <- unequal$V[unequal$cue == "B" & unequal$trial == max(unequal$trial)]
 

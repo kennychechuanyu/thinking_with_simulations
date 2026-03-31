@@ -258,7 +258,7 @@ ui <- page_navbar(
         hr(),
         h5(icon("cog"), " Parameters"),
         layout_columns(col_widths = c(6, 6),
-          numericInput("t3_alpha", HTML("&alpha;"), 0.4, min = 0.05, max = 0.95, step = 0.05),
+          numericInput("t3_alpha", HTML("&alpha;<sub>A</sub>"), 0.4, min = 0.05, max = 0.95, step = 0.05),
           numericInput("t3_beta", HTML("&beta;/S"), 0.3, min = 0.05, max = 0.95, step = 0.05)
         ),
         hr(),
@@ -486,6 +486,34 @@ server <- function(input, output, session) {
       })
   }
 
+  t3_apply_map <- function(v) {
+    switch(input$t3_obs,
+      id = v,
+      sig = obs_sigmoid(v, gamma = 5, theta = 0.5),
+      thr = obs_threshold(v, input$t3_theta))
+  }
+
+  t3_map_name <- function() {
+    switch(input$t3_obs,
+      id = "Observation readout (raw V_B)",
+      sig = "Observation readout (sigmoid)",
+      thr = "Observation readout (threshold)")
+  }
+
+  t3_map_note <- function() {
+    switch(input$t3_obs,
+      id = "Mapping: raw V",
+      sig = "Mapping: sigmoid (gamma = 5, theta = 0.5)",
+      thr = sprintf("Mapping: threshold (theta = %.2f)", input$t3_theta))
+  }
+
+  t3_y_label <- function() {
+    switch(input$t3_obs,
+      id = "V_B",
+      sig = "Predicted response",
+      thr = "Predicted response")
+  }
+
   output$t2_mapping_plot <- renderPlot({
     # Build mapping curve
     v_seq <- seq(0, 1, length.out = 200)
@@ -573,17 +601,18 @@ server <- function(input, output, session) {
     dp3 <- make_trials("B", 1, input$t3_p3, "Phase 3")
 
     # Full trajectories for plot
-    rw12 <- rw_simulate(dp12, alpha = c(A=a, B=a), beta = b)
+    rw12 <- rw_simulate(dp12, alpha = c(A = a, B = 0.4), beta = b)
     rw_V <- extract_final_V(rw12); rw_vb_p2 <- rw_V[["B"]]
     rw_V["B"] <- g * rw_vb_p2
-    rw3 <- rw_simulate(dp3, alpha = c(A=a, B=a), beta = b, V_init = rw_V, cue_names = c("A","B"))
+    rw3 <- rw_simulate(dp3, alpha = c(A = a, B = 0.4), beta = b,
+                       V_init = rw_V, cue_names = c("A", "B"))
     rw_all <- combine_phases(rw12, rw3); rw_all$model <- "RW"
 
-    ms <- mack_final_state(dp12, S = c(A=b, B=b), alpha_init = c(A=0.5, B=0.5))
+    ms <- mack_final_state(dp12, S = c(A = b, B = b), alpha_init = c(A = 0.5, B = 0.5))
     mack_vb_p2 <- ms$V[["B"]]; ms$V["B"] <- g * mack_vb_p2
-    alpha_use <- if (input$t3_freeze) c(A=0.5, B=0.5) else ms$alpha
-    m3 <- mack_simulate(dp3, S = c(A=b, B=b), alpha_init = alpha_use,
-                        V_init = ms$V, cue_names = c("A","B"))
+    alpha_use <- if (input$t3_freeze) c(A = 0.5, B = 0.5) else ms$alpha
+    m3 <- mack_simulate(dp3, S = c(A = b, B = b), alpha_init = alpha_use,
+                        V_init = ms$V, cue_names = c("A", "B"))
     m3_df <- m3[, c("trial","phase","cue","V")]
     mlabel <- if (input$t3_freeze) "Mack (frozen)" else "Mack"
     # Offset Phase 3 trials
@@ -591,19 +620,27 @@ server <- function(input, output, session) {
     m3_df$trial <- m3_df$trial + p12_len
     m3_df$model <- mlabel
     # Also build Mack P1+P2 trajectory
-    m12 <- mack_simulate(dp12, S = c(A=b, B=b), alpha_init = c(A=0.5, B=0.5))
+    m12 <- mack_simulate(dp12, S = c(A = b, B = b), alpha_init = c(A = 0.5, B = 0.5))
     m12_df <- m12[, c("trial","phase","cue","V")]
     m12_df$model <- mlabel
 
     rw_b <- rw_all[rw_all$cue == "B", c("trial","phase","cue","V","model")]
     mack_b <- rbind(m12_df[m12_df$cue == "B",], m3_df[m3_df$cue == "B",])
+    rw_b$readout <- t3_apply_map(rw_b$V)
+    mack_b$readout <- t3_apply_map(mack_b$V)
 
     list(data = rbind(rw_b, mack_b),
          rw_vb = tail(rw3$V[rw3$cue == "B"], 1),
          mack_vb = tail(m3_df$V[m3_df$cue == "B"], 1),
-         alpha_b = ms$alpha[["B"]],
+         rw_readout = tail(rw_b$readout, 1),
+         mack_readout = tail(mack_b$readout, 1),
+         alpha_rw = 0.4,
+         alpha_b = alpha_use[["B"]],
          p1_end = input$t3_p1, p2_end = input$t3_p1 + input$t3_p2,
-         mlabel = mlabel)
+         mlabel = mlabel,
+         map_name = t3_map_name(),
+         map_note = t3_map_note(),
+         y_label = t3_y_label())
   })
 
   output$t3_full_plot <- renderPlot({
@@ -643,53 +680,67 @@ server <- function(input, output, session) {
   output$t3_p3_plot <- renderPlot({
     r <- t3_res()
     p3_data <- r$data[r$data$trial > r$p2_end, ]
+    y_limits <- if (input$t3_obs == "id") c(-0.05, 1.05) else c(-0.02, 1.02)
+    y_breaks <- if (input$t3_obs == "id") seq(0, 1, 0.25) else seq(0, 1, 0.2)
 
     models_p3 <- unique(p3_data$model)
     cols_p3 <- setNames(c(pal[["blue"]], pal[["red"]]), models_p3)
 
-    ggplot(p3_data, aes(trial - r$p2_end, V, color = model)) +
+    ggplot(p3_data, aes(trial - r$p2_end, readout, color = model)) +
       geom_line(linewidth = 1) + geom_point(size = 2) +
       scale_color_manual(values = cols_p3) +
-      scale_y_continuous(limits = c(-0.05, 1.05)) +
-      labs(x = "Phase 3 Trial", y = expression(V[B]),
-           title = "Phase 3 Close-Up") +
+      scale_y_continuous(limits = y_limits, breaks = y_breaks) +
+      labs(x = "Phase 3 Trial", y = r$y_label,
+           title = "Phase 3 Close-Up",
+           subtitle = r$map_note) +
       theme_app(base_size = 11) + theme(legend.position = "none")
   })
 
   output$t3_internal <- renderUI({
     r <- t3_res()
-    div <- abs(r$rw_vb - r$mack_vb)
+    latent_div <- abs(r$rw_vb - r$mack_vb)
+    readout_div <- abs(r$rw_readout - r$mack_readout)
     tags$div(
       tags$table(class = "table table-sm table-bordered",
         tags$tr(tags$th(""), tags$th("RW"), tags$th(r$mlabel)),
-        tags$tr(tags$td("Final V_B"), tags$td(sprintf("%.3f", r$rw_vb)),
+        tags$tr(tags$td("Latent V_B"), tags$td(sprintf("%.3f", r$rw_vb)),
                 tags$td(sprintf("%.3f", r$mack_vb))),
+        tags$tr(tags$td(r$map_name), tags$td(sprintf("%.3f", r$rw_readout)),
+                tags$td(sprintf("%.3f", r$mack_readout))),
         tags$tr(tags$td(HTML("&alpha;<sub>B</sub> (into P3)")),
-                tags$td("0.40 (fixed)"),
+                tags$td(sprintf("%.2f (fixed)", r$alpha_rw)),
                 tags$td(sprintf("%.3f", r$alpha_b)))
       ),
-      p(class = "fw-bold", sprintf("Divergence: %.3f", div))
+      p(class = "fw-bold mb-1", sprintf("Latent divergence: %.3f", latent_div)),
+      p(class = "mb-0", sprintf("Readout divergence: %.3f", readout_div))
     )
   })
 
   output$t3_status <- renderUI({
     r <- t3_res()
-    div_val <- abs(r$rw_vb - r$mack_vb)
+    div_val <- abs(r$rw_readout - r$mack_readout)
     badges <- list()
     if (input$t3_gen > 0.3)
       badges <- c(badges, list(status_badge("Generalization load-bearing", "warning")))
     if (input$t3_freeze)
       badges <- c(badges, list(status_badge("Attention ablated", "info")))
-    if (div_val > 0.15)
+    if (input$t3_obs == "thr") {
+      if (div_val > 0)
+        badges <- c(badges, list(status_badge("Qualitative separation", "success")))
+      else
+        badges <- c(badges, list(status_badge("Same behavioral prediction", "secondary")))
+    } else if (div_val > 0.15) {
       badges <- c(badges, list(status_badge("Strong divergence", "success")))
-    else if (div_val > 0.05)
+    } else if (div_val > 0.05) {
       badges <- c(badges, list(status_badge("Moderate divergence", "secondary")))
-    else
+    } else {
       badges <- c(badges, list(status_badge("Weak divergence", "danger")))
+    }
 
     do.call(tagList, c(badges, list(
-      p(class = "small text-muted mt-2",
-        "Try adjusting generalization, Phase 2 length, or ablation",
+      p(class = "small text-muted mt-2 mb-1", r$map_note),
+      p(class = "small text-muted",
+        "Try adjusting generalization, Phase 2 length, observation mapping, or ablation",
         "to see which auxiliary assumptions carry the conclusion."))))
   })
 
@@ -715,9 +766,9 @@ server <- function(input, output, session) {
                  make_trials(c("A","B"), 1, round(p$n_p2), "P2"))
         d3 <- make_trials("B", 1, n_p3, "P3")
 
-        rv <- rw_final(d12, alpha = c(A=a, B=a), beta = b)
+        rv <- rw_final(d12, alpha = c(A = a, B = 0.4), beta = b)
         rv["B"] <- gen * rv[["B"]]
-        rv3 <- rw_final(d3, alpha = c(A=a, B=a), beta = b, V_init = rv)[["B"]]
+        rv3 <- rw_final(d3, alpha = c(A = a, B = 0.4), beta = b, V_init = rv)[["B"]]
 
         ms <- mack_final_state(d12, S = c(A=b, B=b), alpha_init = c(A=0.5, B=0.5))
         ms$V["B"] <- gen * ms$V[["B"]]

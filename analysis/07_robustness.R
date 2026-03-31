@@ -383,6 +383,7 @@ beta_down_range <- c(0.05, 0.10, 0.15, 0.30)
 
 attn_sweep <- expand.grid(beta_up = beta_up_range, beta_down = beta_down_range)
 attn_sweep$divergence   <- NA_real_
+attn_sweep$signed_divergence <- NA_real_
 attn_sweep$vb_rw        <- NA_real_
 attn_sweep$vb_mack      <- NA_real_
 attn_sweep$alpha_B_end  <- NA_real_
@@ -417,6 +418,7 @@ for (i in seq_len(nrow(attn_sweep))) {
   attn_sweep$vb_rw[i]       <- vb_rw_D
   attn_sweep$vb_mack[i]     <- state_p3$V[["B"]]
   attn_sweep$alpha_B_end[i] <- state$alpha[["B"]]  # alpha_B at Phase 2/3 boundary
+  attn_sweep$signed_divergence[i] <- vb_rw_D - state_p3$V[["B"]]
   attn_sweep$divergence[i]  <- abs(vb_rw_D - state_p3$V[["B"]])
 }
 
@@ -426,7 +428,8 @@ cat(sprintf("  Completed %d combinations in %.1f seconds.\n\n",
 
 # --- Checkpoint ---
 cat("  Attention parameter sweep results:\n")
-print(attn_sweep[, c("beta_up", "beta_down", "alpha_B_end", "vb_mack", "divergence")])
+print(attn_sweep[, c("beta_up", "beta_down", "alpha_B_end", "vb_mack",
+                     "signed_divergence", "divergence")])
 cat(sprintf("\n  Max divergence:  %.4f  (beta_up=%.2f, beta_down=%.2f)\n",
     max(attn_sweep$divergence),
     attn_sweep$beta_up[which.max(attn_sweep$divergence)],
@@ -436,6 +439,9 @@ cat(sprintf("  Min divergence:  %.4f  (beta_up=%.2f, beta_down=%.2f)\n",
     attn_sweep$beta_up[which.min(attn_sweep$divergence)],
     attn_sweep$beta_down[which.min(attn_sweep$divergence)]))
 cat(sprintf("  RW V_B (constant): %.4f\n", vb_rw_D))
+cat(sprintf("  RW > Mack in %d/%d combinations; Mack > RW in %d/%d combinations.\n",
+    sum(attn_sweep$signed_divergence > 0), nrow(attn_sweep),
+    sum(attn_sweep$signed_divergence < 0), nrow(attn_sweep)))
 cat("\n")
 
 
@@ -469,4 +475,4 @@ cat("\n=== Robustness Check Summary ===\n")
 cat("A. Observation function: divergence region shifts with obs function choice.\n")
 cat("B. V_B reset: RW > Mack ordering persists; magnitude decreases with generalization.\n")
 cat("C. Divergence metric: absolute, ratio, and slope metrics agree qualitatively.\n")
-cat("D. Attention parameters: divergence increases with beta_down.\n")
+cat("D. Attention parameters: absolute divergence often increases with beta_down, and high beta_up can reverse the ordering in some combinations.\n")

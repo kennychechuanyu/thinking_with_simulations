@@ -138,9 +138,12 @@ cat("\n=== Recovery vs. Noise Level ===\n")
 noise_levels <- c(0.5, 1.0, 2.0, 3.0, 5.0)
 n_sims_noise <- 100
 
-for (noise in noise_levels) {
+noise_results <- data.frame(sigma = noise_levels, recovery = NA_real_)
+
+for (ni in seq_along(noise_levels)) {
+  noise   <- noise_levels[ni]
   correct <- 0L
-  total <- 0L
+  total   <- 0L
   for (gen in c("RW", "Mack")) {
     for (sim in seq_len(n_sims_noise)) {
       vb_obs <- numeric(n_subj)
@@ -152,9 +155,43 @@ for (noise in noise_levels) {
       sse_mack <- sum((vb_obs - ref_mack)^2)
       selected <- ifelse(sse_rw < sse_mack, "RW", "Mack")
       if (selected == gen) correct <- correct + 1L
-      total <- total + 1L
+      total   <- total + 1L
     }
   }
-  cat(sprintf("  sigma = %.1f: recovery = %.1f%%\n", noise, 100 * correct / total))
+  noise_results$recovery[ni] <- 100 * correct / total
+  cat(sprintf("  sigma = %.1f: recovery = %.1f%%\n", noise, noise_results$recovery[ni]))
 }
+
+
+# === Figure S4: Recovery Rate vs. Observation Noise ==========================
+
+library(ggplot2)
+dir.create("Figures", showWarnings = FALSE)
+
+figS4 <- ggplot(noise_results, aes(x = sigma, y = recovery)) +
+  geom_hline(yintercept = 50, linetype = "dotted",
+             colour = "#888888", linewidth = 0.5) +
+  geom_hline(yintercept = 80, linetype = "dashed",
+             colour = "#888888", linewidth = 0.5) +
+  geom_line(colour = "#4477AA", linewidth = 0.8) +
+  geom_point(colour = "#4477AA", size = 3) +
+  annotate("text", x = 4.8, y = 82.5, label = "80%",
+           colour = "#888888", size = 3, hjust = 1) +
+  annotate("text", x = 4.8, y = 52.5, label = "Chance (50%)",
+           colour = "#888888", size = 3, hjust = 1) +
+  scale_x_continuous(breaks = noise_levels) +
+  scale_y_continuous(limits = c(40, 105),
+                     breaks = seq(50, 100, by = 10)) +
+  labs(
+    x = "Observation noise (sigma)",
+    y = "Recovery rate (%)"
+  ) +
+  theme_classic(base_size = 11)
+
+ggsave("Figures/figS4_model_recovery_noise.pdf", figS4,
+       width = 5.0, height = 3.5, device = "pdf")
+ggsave("Figures/figS4_model_recovery_noise.png", figS4,
+       width = 5.0, height = 3.5, dpi = 300, device = "png")
+
+cat("\nFigure S4 saved: Figures/figS4_model_recovery_noise\n")
 

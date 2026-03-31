@@ -202,7 +202,7 @@ fig4 <- ggplot(fig4_data, aes(x = trial, y = V, color = model, linetype = model)
   annotate("text", x = (p1_end + p2_end) / 2, y = y_top,
            label = "Phase 2\nAB+", size = 2.2, color = "#AAAAAA", lineheight = 0.9) +
   annotate("text", x = p3_mid, y = y_top,
-           label = "Phase 3\nB\u2192new", size = 2.4, color = "#555555",
+           label = "Phase 3\nB+ (new)", size = 2.4, color = "#555555",
            fontface = "bold", lineheight = 0.9) +
   # Endpoint value annotations
   annotate("text", x = last_trial + 0.8, y = rw_final_vb,

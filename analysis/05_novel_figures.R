@@ -210,10 +210,11 @@ cat(sprintf("  Mack V_B end Phase 2: %.3f (threshold %.1f)\n",
 # ============================================================================
 # FIGURE 11: Mechanism Isolation (Section 4.6)
 # ============================================================================
-# Shows Phase 3 learning under three conditions:
+# Shows Phase 3 learning under four conditions:
 #   1. Rescorla-Wagner (alpha_B intact)
 #   2. Full Mackintosh (alpha_B suppressed)
 #   3. Mackintosh with frozen alpha (attention mechanism disabled)
+#   4. Rescorla-Wagner with suppressed alpha
 
 cat("\nGenerating Figure 11: Mechanism isolation...\n")
 
@@ -256,14 +257,14 @@ mack_vb_p3 <- mack_p3[mack_p3$cue == "B", c("trial", "V")]
 mack_vb_p3$model <- "Mackintosh"
 
 frozen_vb_p3 <- mack_frozen_p3[mack_frozen_p3$cue == "B", c("trial", "V")]
-frozen_vb_p3$model <- "Mack (frozen α)"
+frozen_vb_p3$model <- "Mack (frozen alpha)"
 
 # --- RW with suppressed alpha (global error + low attention) ---
 rw_suppressed_p3 <- rw_simulate(design_p3,
                                  alpha = c(A = 0.4, B = alpha_mack[["B"]]),
                                  beta = 0.3, V_init = V_rw, cue_names = c("A", "B"))
 suppressed_vb_p3 <- rw_suppressed_p3[rw_suppressed_p3$cue == "B", c("trial", "V")]
-suppressed_vb_p3$model <- "RW (suppressed α)"
+suppressed_vb_p3$model <- "RW (suppressed alpha)"
 
 fig11_data <- rbind(rw_vb_p3, mack_vb_p3, frozen_vb_p3, suppressed_vb_p3)
 
@@ -272,12 +273,12 @@ fig11 <- ggplot(fig11_data, aes(x = trial, y = V, color = model, linetype = mode
   geom_point(size = 1.0) +
   scale_color_manual(values = c("Rescorla-Wagner" = pal[["blue"]],
                                 "Mackintosh" = pal[["red"]],
-                                "Mack (frozen α)" = pal[["cyan"]],
-                                "RW (suppressed α)" = pal[["yellow"]])) +
+                                "Mack (frozen alpha)" = pal[["cyan"]],
+                                "RW (suppressed alpha)" = pal[["yellow"]])) +
   scale_linetype_manual(values = c("Rescorla-Wagner" = "solid",
                                    "Mackintosh" = "dashed",
-                                   "Mack (frozen α)" = "dotted",
-                                   "RW (suppressed α)" = "longdash")) +
+                                   "Mack (frozen alpha)" = "dotted",
+                                   "RW (suppressed alpha)" = "longdash")) +
   scale_y_continuous(limits = c(-0.05, 1.0), breaks = seq(0, 1, 0.2)) +
   labs(x = "Phase 3 Trial", y = expression(italic(V)[B]),
        color = NULL, linetype = NULL) +
@@ -292,11 +293,11 @@ mack_final_vb <- mack_vb_p3$V[mack_vb_p3$trial == max(mack_vb_p3$trial)]
 frozen_final_vb <- frozen_vb_p3$V[frozen_vb_p3$trial == max(frozen_vb_p3$trial)]
 cat(sprintf("  RW V_B (end Phase 3): %.2f\n", rw_final_vb))
 cat(sprintf("  Mack V_B (end Phase 3): %.2f\n", mack_final_vb))
-cat(sprintf("  Mack frozen-α V_B (end Phase 3): %.2f\n", frozen_final_vb))
+cat(sprintf("  Mack frozen-alpha V_B (end Phase 3): %.2f\n", frozen_final_vb))
 suppressed_final_vb <- suppressed_vb_p3$V[suppressed_vb_p3$trial == max(suppressed_vb_p3$trial)]
-cat(sprintf("  RW suppressed-α V_B (end Phase 3): %.2f\n", suppressed_final_vb))
+cat(sprintf("  RW suppressed-alpha V_B (end Phase 3): %.2f\n", suppressed_final_vb))
 cat("\n  2x2 ablation summary:\n")
-cat("                    Fixed α    Suppressed α\n")
+cat("                    Fixed alpha    Suppressed alpha\n")
 cat(sprintf("  Global error (RW): %.2f       %.2f\n", rw_final_vb, suppressed_final_vb))
 cat(sprintf("  Local error (Mack): %.2f       %.2f\n", frozen_final_vb, mack_final_vb))
 

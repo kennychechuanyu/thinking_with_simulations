@@ -248,4 +248,57 @@ ggsave("Figures/figS2_ddm_summary_stats.png", figS2,
 
 cat("Figure S1 saved: Figures/figS1_ddm_rt_distributions\n")
 cat("Figure S2 saved: Figures/figS2_ddm_summary_stats\n")
+
+
+# === Figure S3: Accuracy Surface (Structural Result Visualized) ==============
+# Heatmap of P(correct) = sigmoid(v*a) over the (v, a) parameter space.
+# The dashed hyperbolic curve marks v*a = 0.60; Config A and Config B both
+# lie on this curve, making the accuracy-equivalence structural result visible.
+
+v_grid <- seq(0.05, 1.20, by = 0.025)
+a_grid <- seq(0.30, 3.50, by = 0.05)
+surf   <- expand.grid(v = v_grid, a = a_grid)
+surf$accuracy <- 1 / (1 + exp(-surf$v * surf$a))
+
+va_line <- data.frame(v = seq(0.15, 1.20, by = 0.005))
+va_line$a <- 0.60 / va_line$v
+va_line   <- va_line[va_line$a >= 0.30 & va_line$a <= 3.50, ]
+
+configs_pts <- data.frame(
+  v = c(0.30, 0.60), a = c(2.0, 1.0)
+)
+
+figS3 <- ggplot(surf, aes(x = v, y = a)) +
+  geom_raster(aes(fill = accuracy), interpolate = TRUE) +
+  geom_contour(aes(z = accuracy),
+               breaks = seq(0.55, 0.95, by = 0.05),
+               colour = "white", alpha = 0.4, linewidth = 0.3) +
+  geom_line(data = va_line, aes(x = v, y = a),
+            colour = "white", linewidth = 1.0, linetype = "dashed",
+            inherit.aes = FALSE) +
+  geom_point(data = configs_pts, aes(x = v, y = a),
+             colour = "white", size = 3.5, shape = 16, inherit.aes = FALSE) +
+  annotate("text", x = 0.30, y = 2.20, label = "Config A",
+           colour = "white", size = 3, fontface = "bold") +
+  annotate("text", x = 0.60, y = 0.82, label = "Config B",
+           colour = "white", size = 3, fontface = "bold") +
+  scale_fill_viridis_c(option = "D", name = "P(correct)",
+                       limits = c(0.5, 1.0),
+                       breaks = seq(0.5, 1.0, by = 0.1)) +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(0.2, 1.2, by = 0.2)) +
+  scale_y_continuous(expand = c(0, 0), breaks = seq(0.5, 3.5, by = 0.5)) +
+  labs(
+    x = "Drift rate (v)",
+    y = "Boundary separation (a)"
+  ) +
+  coord_cartesian(xlim = c(0.05, 1.20), ylim = c(0.30, 3.50)) +
+  theme_classic(base_size = 11) +
+  theme(legend.position = "right")
+
+ggsave("Figures/figS3_ddm_accuracy_surface.pdf", figS3,
+       width = 5.5, height = 4.0, device = "pdf")
+ggsave("Figures/figS3_ddm_accuracy_surface.png", figS3,
+       width = 5.5, height = 4.0, dpi = 300, device = "png")
+
+cat("Figure S3 saved: Figures/figS3_ddm_accuracy_surface\n")
 cat("DDM transfer demonstration complete.\n")
