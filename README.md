@@ -1,5 +1,7 @@
 # Thinking With Models Through Simulation
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19234591.svg)](https://doi.org/10.5281/zenodo.19234591)
+
 Companion code and materials for the paper:
 
 > Yu, K. (2026). Thinking With Models Through Simulation. *Manuscript in preparation.*
