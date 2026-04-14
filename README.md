@@ -1,6 +1,6 @@
 # Thinking With Models Through Simulation
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19234591.svg)](https://doi.org/10.5281/zenodo.19234591)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19234590.svg)](https://doi.org/10.5281/zenodo.19234590)
 
 Companion code and materials for the paper:
 
