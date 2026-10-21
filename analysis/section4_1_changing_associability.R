@@ -115,7 +115,7 @@ runs <- data.frame(
   change = c("Nothing; associability keeps updating in the new task",
              "Associability held fixed during compound training",
              "Both associabilities reset to .5 when the new task begins",
-             "Rescorla–Wagner learner with fixed saliences; multiplier stays fixed"),
+             "Rescorla–Wagner learner with unequal fixed saliences; multiplier stays fixed"),
   B = paper_number(salience * c(alpha_B, prevent_alpha_B, alpha_init, alpha_B), 3),
   D = paper_number(salience * c(alpha_D, prevent_alpha_D, alpha_init, alpha_D), 3)
 )

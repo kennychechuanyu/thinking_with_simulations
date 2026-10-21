@@ -129,8 +129,8 @@ panel_b <- ggplot() +
   scale_y_continuous(breaks = c(0, .2, .4), labels = c("0", ".2", ".4"),
                      expand = expansion(mult = 0)) +
   coord_cartesian(ylim = b_range, clip = "off") +
-  labs(title = "(b)  The observed difference and each candidate fitted to all 80",
-       subtitle = "Points: observed, with 95% intervals; gray line: generating probabilities",
+  labs(title = "(b)  Observed difference and fits to all 80 participants",
+       subtitle = "Points: observed, with 95% intervals; gray line: generating model",
        x = expression("Presentation with the new outcome, " * italic(q)),
        y = "Proportion yes, D minus B") +
   theme_figure +

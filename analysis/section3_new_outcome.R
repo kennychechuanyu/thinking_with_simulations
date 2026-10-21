@@ -162,8 +162,8 @@ design_panel <- ggplot() +
            colour = grey, linewidth = .35,
            arrow = arrow(length = unit(3.5, "pt"), type = "closed")) +
   annotate("text", x = 5.3, y = c(.8, .27), parse = TRUE,
-           label = c("paste('B learns beside A, which already predicts ', italic(O)[1], ';')",
-                     "'D learns beside E, which is new'"),
+           label = c("paste('B learns alongside A, which already predicts ', italic(O)[1], ';')",
+                     "'D learns alongside E, which is new'"),
            size = text_size, colour = grey) +
   annotate("text", x = phase_x[3], y = c(.8, .27),
            label = c("Each cue alone;", "new values start at 0"),
@@ -237,7 +237,7 @@ gap_panel <- ggplot(data.frame(k = k, H = H_adaptive), aes(k, H)) +
   scale_y_continuous(breaks = c(0, .1, .2, .3), labels = c("0", ".1", ".2", ".3"),
                      expand = expansion(mult = 0)) +
   coord_cartesian(xlim = c(-.3, 14.2), ylim = c(-.01, .345), clip = "off") +
-  labs(title = "(d)  History effect",
+  labs(title = "(d)  The B–D gap",
        subtitle = "D minus B within each model",
        x = x_title, y = expression(italic(H) * " = " * italic(V)[D] * " − " * italic(V)[B])) +
   theme_paper()
