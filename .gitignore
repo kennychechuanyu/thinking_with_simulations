@@ -1,0 +1,25 @@
+# Figure PDFs are written locally; the PNGs are tracked
+Figures/*.pdf
+
+# Files written when Figures/fig01_thinking_cycle.tex is compiled
+Figures/*.aux
+Figures/*.log
+
+# Section 5 job checkpoints, restricted reruns and pilot runs
+results/section5/jobs/
+results/section5/subset/
+results/section5/pilot/
+
+# R session files
+.Rhistory
+.RData
+.Rproj.user/
+
+# The browser version of the app, written by shinylive::export()
+site/
+
+# Operating-system and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*~

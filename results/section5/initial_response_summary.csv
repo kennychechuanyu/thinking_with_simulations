@@ -1,0 +1,3 @@
+"scenario","repetitions","carry_preferred","initial_rejection","carry_and_rejection","rejection_given_carry"
+"associability",400,0.9675,0.015,0.015,0.0155038759689922
+"value",400,0.95,0.9475,0.905,0.952631578947368

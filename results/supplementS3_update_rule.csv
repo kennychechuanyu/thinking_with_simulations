@@ -1,0 +1,121 @@
+"what","rule","x","value"
+"H_by_k","Error-difference (main text)",1,0.079385830845125
+"H_by_k","Error-difference (main text)",2,0.141258022575683
+"H_by_k","Error-difference (main text)",3,0.189350189133918
+"H_by_k","Error-difference (main text)",4,0.226042794202996
+"H_by_k","Error-difference (main text)",5,0.252903783125539
+"H_by_k","Error-difference (main text)",6,0.271026913112448
+"H_by_k","Error-difference (main text)",7,0.281252897344978
+"H_by_k","Error-difference (main text)",8,0.284316908970554
+"H_by_k","Error-difference (main text)",9,0.280945112052897
+"H_by_k","Error-difference (main text)",10,0.271912393504677
+"H_by_k","Rank-based",1,0.0793858308451253
+"H_by_k","Rank-based",2,0.141258022575684
+"H_by_k","Rank-based",3,0.182125460457266
+"H_by_k","Rank-based",4,0.204817490672348
+"H_by_k","Rank-based",5,0.212677788202188
+"H_by_k","Rank-based",6,0.209160830233125
+"H_by_k","Rank-based",7,0.197528765447359
+"H_by_k","Rank-based",8,0.180652773907001
+"H_by_k","Rank-based",9,0.160908638476226
+"H_by_k","Rank-based",10,0.140148070495228
+"delta_H8_by_g_V","Error-difference (main text)",0,0.284316908970554
+"delta_H8_by_g_V","Rank-based",0,0.180652773907001
+"delta_H8_by_g_V","Error-difference (main text)",0.05,0.266585186522991
+"delta_H8_by_g_V","Rank-based",0.05,0.145937304820422
+"delta_H8_by_g_V","Error-difference (main text)",0.1,0.24909086554652
+"delta_H8_by_g_V","Rank-based",0.1,0.135647959884006
+"delta_H8_by_g_V","Error-difference (main text)",0.15,0.23183006514057
+"delta_H8_by_g_V","Rank-based",0.15,0.12535861494759
+"delta_H8_by_g_V","Error-difference (main text)",0.2,0.214798960938119
+"delta_H8_by_g_V","Rank-based",0.2,0.115069270011174
+"delta_H8_by_g_V","Error-difference (main text)",0.25,0.197993784354325
+"delta_H8_by_g_V","Rank-based",0.25,0.104779925074758
+"delta_H8_by_g_V","Error-difference (main text)",0.3,0.181410821843877
+"delta_H8_by_g_V","Rank-based",0.3,0.0944905801383421
+"delta_H8_by_g_V","Error-difference (main text)",0.35,0.165046414167003
+"delta_H8_by_g_V","Rank-based",0.35,0.0842012352019263
+"delta_H8_by_g_V","Error-difference (main text)",0.4,0.148896955664075
+"delta_H8_by_g_V","Rank-based",0.4,0.0739118902655103
+"delta_H8_by_g_V","Error-difference (main text)",0.45,0.132958893538715
+"delta_H8_by_g_V","Rank-based",0.45,0.0636225453290943
+"delta_H8_by_g_V","Error-difference (main text)",0.5,0.117228727149357
+"delta_H8_by_g_V","Rank-based",0.5,0.0533332003926783
+"delta_H8_by_g_V","Error-difference (main text)",0.55,0.101703007309166
+"delta_H8_by_g_V","Rank-based",0.55,0.0430438554562626
+"delta_H8_by_g_V","Error-difference (main text)",0.6,0.0863783355942622
+"delta_H8_by_g_V","Rank-based",0.6,0.0327545105198464
+"delta_H8_by_g_V","Error-difference (main text)",0.65,0.0712513636601611
+"delta_H8_by_g_V","Rank-based",0.65,0.0224651655834306
+"delta_H8_by_g_V","Error-difference (main text)",0.7,0.0563187925663734
+"delta_H8_by_g_V","Rank-based",0.7,0.0121758206470145
+"delta_H8_by_g_V","Error-difference (main text)",0.75,0.0415773721090749
+"delta_H8_by_g_V","Rank-based",0.75,0.00188647571059845
+"delta_H8_by_g_V","Error-difference (main text)",0.8,0.0270239001617859
+"delta_H8_by_g_V","Rank-based",0.8,-0.00840286922581727
+"delta_H8_by_g_V","Error-difference (main text)",0.85,0.0126552220239805
+"delta_H8_by_g_V","Rank-based",0.85,-0.0186922141622335
+"delta_H8_by_g_V","Error-difference (main text)",0.9,-0.00153177022244223
+"delta_H8_by_g_V","Rank-based",0.9,-0.0289815590986494
+"delta_H8_by_g_V","Error-difference (main text)",0.95,-0.0155401383489024
+"delta_H8_by_g_V","Rank-based",0.95,-0.0392709040350653
+"delta_H8_by_g_V","Error-difference (main text)",1,-0.0293728986081681
+"delta_H8_by_g_V","Rank-based",1,-0.0495602489714813
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1e-08,0.499999994546345
+"alpha_D_by_S_E_minus_S_D","Rank-based",1e-08,0.5
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1.77827941003892e-08,0.499999990301878
+"alpha_D_by_S_E_minus_S_D","Rank-based",1.77827941003892e-08,0.273659469012322
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",3.16227766016838e-08,0.499999982754029
+"alpha_D_by_S_E_minus_S_D","Rank-based",3.16227766016838e-08,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",5.62341325190349e-08,0.499999969331846
+"alpha_D_by_S_E_minus_S_D","Rank-based",5.62341325190349e-08,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1e-07,0.499999945463456
+"alpha_D_by_S_E_minus_S_D","Rank-based",1e-07,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1.77827941003892e-07,0.499999903018796
+"alpha_D_by_S_E_minus_S_D","Rank-based",1.77827941003892e-07,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",3.16227766016838e-07,0.499999827540353
+"alpha_D_by_S_E_minus_S_D","Rank-based",3.16227766016838e-07,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",5.62341325190349e-07,0.499999693318656
+"alpha_D_by_S_E_minus_S_D","Rank-based",5.62341325190349e-07,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1e-06,0.499999454635185
+"alpha_D_by_S_E_minus_S_D","Rank-based",1e-06,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1.77827941003892e-06,0.499999030189938
+"alpha_D_by_S_E_minus_S_D","Rank-based",1.77827941003892e-06,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",3.16227766016838e-06,0.499998275409774
+"alpha_D_by_S_E_minus_S_D","Rank-based",3.16227766016838e-06,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",5.62341325190349e-06,0.499996933206317
+"alpha_D_by_S_E_minus_S_D","Rank-based",5.62341325190349e-06,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1e-05,0.49999454641432
+"alpha_D_by_S_E_minus_S_D","Rank-based",1e-05,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1.77827941003892e-05,0.499990302096945
+"alpha_D_by_S_E_minus_S_D","Rank-based",1.77827941003892e-05,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",3.16227766016838e-05,0.499982754722474
+"alpha_D_by_S_E_minus_S_D","Rank-based",3.16227766016838e-05,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",5.62341325190349e-05,0.499969334038722
+"alpha_D_by_S_E_minus_S_D","Rank-based",5.62341325190349e-05,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1e-04,0.499945470390213
+"alpha_D_by_S_E_minus_S_D","Rank-based",1e-04,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.000177827941003892,0.499903040723016
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.000177827941003892,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.000316227766016838,0.499827609684097
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.000316227766016838,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.000562341325190349,0.499693537862193
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.000562341325190349,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.001,0.499455328154392
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.001,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.00177827941003892,0.499032380060932
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.00177827941003892,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.00316227766016838,0.498282328574096
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.00316227766016838,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.00562341325190349,0.496955046270849
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.00562341325190349,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.01,0.494615257922996
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.01,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.0177827941003892,0.490518561527243
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.0177827941003892,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.0316227766016838,0.483432297818708
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.0316227766016838,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.0562341325190349,0.471437862953941
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.0562341325190349,0.253799369815801
+"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.1,0.45190743770084
+"alpha_D_by_S_E_minus_S_D","Rank-based",0.1,0.253799369815801

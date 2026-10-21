@@ -1,0 +1,239 @@
+# Learning models of Sections 2-4: Rescorla-Wagner (Equation 1), the adaptive
+# model (Equations 7 and 8) and the response rules of Section 2.5. Base R only.
+# The analyses, tests/verify_models.R, the reference implementation in
+# R/inference.R and the companion app use these functions.
+#
+# A design is a list of trials made by make_trials(). Each trial gives the cues
+# present ($cues), the outcome lambda ($lambda, 1 or 0) and a phase label
+# ($phase).
+
+
+# Rescorla-Wagner model (Equation 1). The cues present on a trial share one
+# prediction error, lambda minus their summed value; absent cues keep their
+# values, and the saliences alpha and the rate beta do not change with
+# training. Returns one row per cue and trial, holding the value at the start
+# of the trial; trial length(design) + 1 holds the values after the last trial.
+rw_simulate <- function(design, alpha, beta, V_init = NULL, cue_names = NULL) {
+  if (is.null(cue_names))
+    cue_names <- unique(unlist(lapply(design, function(x) x$cues)))
+  n_cues   <- length(cue_names)
+  n_trials <- length(design)
+
+  if (!all(cue_names %in% names(alpha)))
+    stop("alpha must contain named values for all cues: ", paste(cue_names, collapse = ", "))
+
+  V <- if (is.null(V_init)) setNames(rep(0, n_cues), cue_names) else V_init
+  # Column t holds the values at the start of trial t.
+  V_by_trial <- matrix(NA_real_, n_cues, n_trials + 1)
+  V_by_trial[, 1] <- V[cue_names]
+
+  for (t in seq_along(design)) {
+    cues_present <- design[[t]]$cues
+    lambda       <- design[[t]]$lambda
+
+    # The error is computed before any value changes, so cues presented
+    # together receive the same error (Section 2.2).
+    delta <- lambda - sum(V[cues_present])
+    V[cues_present] <- V[cues_present] + alpha[cues_present] * beta * delta
+
+    V_by_trial[, t + 1] <- V[cue_names]
+  }
+
+  phases <- vapply(design, function(x) x$phase, character(1))
+  data.frame(
+    trial = rep(seq_len(n_trials + 1), each = n_cues),
+    phase = rep(c(phases, phases[n_trials]), each = n_cues),
+    cue   = rep(cue_names, n_trials + 1),
+    V     = as.vector(V_by_trial),
+    stringsAsFactors = FALSE
+  )
+}
+
+
+# Adaptive model (Equations 7 and 8). Each cue present learns from its own
+# error, lambda - V_i, scaled by its salience S_i and its associability
+# alpha_i. Associability changes by eta times the other cue's absolute error
+# minus the cue's own, so it rises when the cue predicts more accurately than
+# the other cue, falls when it predicts less accurately, and stays unchanged
+# when the errors are equal. A cue presented alone is compared with the error
+# of predicting zero, |lambda|. Absent cues keep their values and
+# associabilities.
+#
+# alpha_init and V_init give the state at the start of the run: alpha_init
+# and zero before training, or alpha_i(0) (Equation 14) and V_i,O2(0)
+# (Equation 16) for a run with the new outcome. Equation 8 keeps associability
+# within [alpha_min, alpha_max] = [.01, 1]. Returns one row per cue and trial,
+# holding V and alpha at the start of the trial; trial length(design) + 1
+# holds the values after the last trial.
+adaptive_simulate <- function(design, S, alpha_init,
+                              eta = 0.05,
+                              V_init = NULL, cue_names = NULL,
+                              alpha_min = 0.01, alpha_max = 1.0) {
+  if (is.null(cue_names))
+    cue_names <- unique(unlist(lapply(design, function(x) x$cues)))
+  n_cues   <- length(cue_names)
+  n_trials <- length(design)
+
+  if (!all(cue_names %in% names(S)) || !all(cue_names %in% names(alpha_init)))
+    stop("S and alpha_init must contain named values for all cues: ",
+         paste(cue_names, collapse = ", "))
+
+  V <- if (is.null(V_init)) setNames(rep(0, n_cues), cue_names) else V_init
+  alpha <- alpha_init
+  # Column t holds the values and associabilities at the start of trial t.
+  V_by_trial <- alpha_by_trial <- matrix(NA_real_, n_cues, n_trials + 1)
+  V_by_trial[, 1] <- V[cue_names]
+  alpha_by_trial[, 1] <- alpha[cue_names]
+
+  for (t in seq_along(design)) {
+    cues_present <- design[[t]]$cues
+    lambda       <- design[[t]]$lambda
+
+    # Both the value update and the error comparison use the values at the
+    # start of the trial, so a change in associability takes effect on the
+    # next trial (Section 3.1).
+    V_start <- V
+
+    for (cue in cues_present) {
+      V[cue] <- V[cue] + S[cue] * alpha[cue] * (lambda - V[cue])
+    }
+
+    # e_own and e_other are e_i and e_-i of Equation 8. With more than two
+    # cues present, which the paper does not use, e_other is the error of the
+    # other cues' summed prediction.
+    for (cue in cues_present) {
+      others  <- setdiff(cues_present, cue)
+      e_own   <- abs(lambda - V_start[cue])
+      e_other <- if (length(others) > 0) {
+        abs(lambda - sum(V_start[others]))
+      } else {
+        abs(lambda)
+      }
+
+      alpha[cue] <- max(alpha_min, min(alpha_max, alpha[cue] + eta * (e_other - e_own)))
+    }
+
+    V_by_trial[, t + 1] <- V[cue_names]
+    alpha_by_trial[, t + 1] <- alpha[cue_names]
+  }
+
+  phases <- vapply(design, function(x) x$phase, character(1))
+  data.frame(
+    trial = rep(seq_len(n_trials + 1), each = n_cues),
+    phase = rep(c(phases, phases[n_trials]), each = n_cues),
+    cue   = rep(cue_names, n_trials + 1),
+    V     = as.vector(V_by_trial),
+    alpha = as.vector(alpha_by_trial),
+    stringsAsFactors = FALSE
+  )
+}
+
+
+# The same two models, returning only the state after the last trial: the
+# values, and for the adaptive model also the associabilities. They are
+# written separately from rw_simulate() and adaptive_simulate() so that
+# tests/verify_models.R can compare the two versions, as described in
+# Section 2.2. The loop in rw_final() is the one printed there.
+rw_final <- function(design, alpha, beta, V_init = NULL) {
+  cue_names <- unique(unlist(lapply(design, function(x) x$cues)))
+  V <- if (is.null(V_init)) setNames(rep(0, length(cue_names)), cue_names) else V_init
+  for (t in seq_along(design)) {
+    cues <- design[[t]]$cues
+    delta <- design[[t]]$lambda - sum(V[cues])
+    V[cues] <- V[cues] + alpha[cues] * beta * delta
+  }
+  V
+}
+
+adaptive_final_state <- function(design, S, alpha_init,
+                                 eta = 0.05,
+                                 V_init = NULL,
+                                 alpha_min = 0.01, alpha_max = 1.0) {
+  cue_names <- unique(unlist(lapply(design, function(x) x$cues)))
+  V <- if (is.null(V_init)) setNames(rep(0, length(cue_names)), cue_names) else V_init
+  alpha <- alpha_init
+  for (t in seq_along(design)) {
+    cues    <- design[[t]]$cues
+    lambda  <- design[[t]]$lambda
+    V_start <- V
+    for (cue in cues) {
+      V[cue] <- V[cue] + S[cue] * alpha[cue] * (lambda - V[cue])
+    }
+    for (cue in cues) {
+      others  <- setdiff(cues, cue)
+      e_own   <- abs(lambda - V_start[cue])
+      e_other <- if (length(others) > 0) abs(lambda - sum(V_start[others])) else abs(lambda)
+      alpha[cue] <- max(alpha_min, min(alpha_max, alpha[cue] + eta * (e_other - e_own)))
+    }
+  }
+  list(V = V, alpha = alpha)
+}
+
+
+# n identical trials: the cues present, the outcome lambda and a phase label.
+make_trials <- function(cues, lambda, n, phase_label) {
+  lapply(seq_len(n), function(i) {
+    list(cues = cues, lambda = lambda, phase = phase_label)
+  })
+}
+
+# Values and associabilities after the last trial of a run of rw_simulate()
+# or adaptive_simulate().
+extract_final_V <- function(run) {
+  final <- run[run$trial == max(run$trial), ]
+  setNames(final$V, final$cue)
+}
+
+extract_final_alpha <- function(run) {
+  final <- run[run$trial == max(run$trial), ]
+  setNames(final$alpha, final$cue)
+}
+
+
+# Response rules of Section 2.5, which turn a learned value V into the
+# probability of a response: the sigmoid of Equation 5, with slope gamma and
+# midpoint theta, and the threshold rule of Equation 6.
+obs_sigmoid <- function(V, gamma = 5, theta = 0.5) {
+  1 / (1 + exp(-gamma * (V - theta)))
+}
+
+obs_threshold <- function(V, theta = 0.5) {
+  as.numeric(V > theta)
+}
+
+
+# Prints the first n_trace trials of a Rescorla-Wagner run step by step, so
+# that the shared error on a compound trial can be checked by hand
+# (Section 2.2). Returns the values after those trials.
+rw_hand_trace <- function(design, alpha, beta, n_trace = 5) {
+  cue_names <- unique(unlist(lapply(design, function(x) x$cues)))
+  V <- setNames(rep(0, length(cue_names)), cue_names)
+  # Numbers as Section 2.3 writes them, without a leading zero.
+  fmt <- function(x, digits = 4) sub("^(-?)0\\.", "\\1.", formatC(x, format = "f", digits = digits))
+
+  for (t in seq_len(min(n_trace, length(design)))) {
+    cues   <- design[[t]]$cues
+    lambda <- design[[t]]$lambda
+    phase  <- design[[t]]$phase
+    sum_V  <- sum(V[cues])
+    delta  <- lambda - sum_V
+
+    cat(sprintf("Trial %d [%s]: cues = {%s}, lambda = %g\n",
+                t, phase, paste(cues, collapse = ", "), lambda))
+    cat(sprintf("  V before: %s\n",
+                paste(sprintf("%s = %s", cue_names, fmt(V[cue_names])), collapse = ", ")))
+    cat(sprintf("  delta = lambda - sum of V present = %g - %s = %s\n",
+                lambda, fmt(sum_V), fmt(delta)))
+    for (cue in cues) {
+      cat(sprintf("  change in V_%s = alpha_%s * beta * delta = %s * %s * %s = %s\n",
+                  cue, cue, fmt(alpha[cue], 2), fmt(beta, 2), fmt(delta),
+                  fmt(alpha[cue] * beta * delta)))
+    }
+
+    V[cues] <- V[cues] + alpha[cues] * beta * delta
+
+    cat(sprintf("  V after:  %s\n\n",
+                paste(sprintf("%s = %s", cue_names, fmt(V[cue_names])), collapse = ", ")))
+  }
+  invisible(V)
+}
