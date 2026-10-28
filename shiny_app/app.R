@@ -1,30 +1,34 @@
-# Thinking with Models: companion app
-# One inquiry in six steps. The reader finds where two explanations of blocking
-# disagree, examines what the disagreement depends on, designs and runs a
-# simulated experiment, decides what its records support, and meets the same
-# question in a different model. Explore lets the reader change the settings
-# freely.
+# Thinking with Computational Models: companion app
+# One investigation in seven steps, following Sections 2 to 8 of the paper. The
+# reader works out what one learning rule implies, finds a comparison in which
+# two explanations of blocking disagree, examines what the disagreement depends
+# on, asks how it would appear in responses, analyzes a simulated experiment,
+# checks a prediction that all its candidates share, and sees two settings of a
+# model of simple decisions that only a different measurement can tell apart.
+# Explore lets the reader change the settings freely.
 #
 # Files in R/ are loaded by Shiny before this one:
-#   models.R      the learning models (a copy of R/models.R; the tests require
-#                 the two to be identical)
-#   engine.R      the model calculations, except the experiments of Step 5;
-#                 checked by tests/verify_app.R
-#   formulas.R    displayed model equations and symbol definitions
-#   helpers.R     shared text, number formats and small building blocks
-#   ask.R         questions, locked answers, and notes
-#   plots.R       figures
-#   opening.R     the opening and the step buttons
-#   training.R    Step 1
-#   comparison.R  Step 2
-#   assumptions.R Step 3
-#   responses.R   Step 4
-#   experiment.R  Step 5 (records from data/inference_cases.rds,
-#                 written by shiny_app/make_inference_cases.R)
-#   decision.R    Step 6
-#   explore.R     the Explore tab
-#   values.R      the model results the page shows, computed once at startup
-# tests/verify_app_flow.R walks through the six steps of the inquiry.
+#   models.R        the learning models (a copy of R/models.R; the tests require
+#                   the two to be identical)
+#   engine.R        the model calculations, except the experiments of Steps 5
+#                   and 6; checked by tests/verify_app.R
+#   formulas.R      displayed model equations and their symbols
+#   helpers.R       shared text, number formats and small building blocks
+#   ask.R           questions, saved answers, and notes
+#   plots.R         figures
+#   opening.R       the opening and the step buttons
+#   rule.R          Step 1, Section 2
+#   explanations.R  Step 2, Section 3
+#   assumptions.R   Step 3, Section 4
+#   behavior.R      Step 4, Section 5
+#   experiment.R    Step 5, Section 6 (responses from data/inference_cases.rds,
+#                   written by shiny_app/make_inference_cases.R)
+#   shared.R        Step 6, Section 7
+#   measurement.R   Step 7, Section 8
+#   explore.R       the Explore tab
+#   values.R        the model results the page shows, computed once at startup
+# tests/verify_app_flow.R walks through the seven steps, and
+# tests/verify_app_feedback.R checks the feedback on every combination of answers.
 #
 # Requirements: shiny, bslib, ggplot2
 # Launch from the repository root: shiny::runApp("shiny_app")
@@ -50,35 +54,33 @@ with_notes <- function(content) div(class = "layout",
 about <- div(class = "part",
   h2(class = "about", "About this page"),
   p(HTML("You can work through this page without reading the accompanying tutorial,
-          <i>Thinking with Models through Simulation to Guide Scientific Inquiry</i> by
-          Kenny Yu (KU Leuven). Both use the same blocking
-          example to compare the Rescorla&ndash;Wagner and adaptive-associability models.")),
-  p("For the derivations, code checks and full simulation study, follow the references
+          <i>Thinking with Computational Models to Guide Scientific Inquiry</i> by Kenny Yu
+          (KU Leuven). Both use the same learning task and the same two learning models,
+          Rescorla&ndash;Wagner and the adaptive model, followed by a model of simple decisions.
+          The seven steps follow Sections 2 to 8 of the tutorial.")),
+  p("For the derivations, the code checks and the full simulation study, follow the references
      marked “In the tutorial” or inspect the R scripts in the repository linked below."),
   h3("Where the numbers come from"),
-  p("Steps 1 to 4 and Explore calculate the model predictions as you use the page.
-     Step 6 calculates accuracy and decision times from the diffusion model.
-     The numerical checks compare these results with the tutorial."),
-  p("Step 5 uses saved simulated experiments from the tutorial's study. Changing
-     the sample size or the recorded presentations selects the corresponding data
-     and analysis; no models are fitted while you use the page."),
-  p("The individual cases use one generating parameter set. The percentages shown
-     at the end summarize 400 experiments per design: 100 under each of four
-     parameter sets."),
+  p("Steps 1 to 4 and Explore calculate the model predictions as you use the page. Step 7
+     calculates accuracy and decision times from the drift diffusion model. The numerical checks
+     compare these results with the tutorial."),
+  p("Steps 5 and 6 use saved simulated experiments from the tutorial's study. Changing the
+     sample size or the analyzed pear trials selects the corresponding responses and analysis.
+     The page does not fit any models while you use it."),
+  p("The saved cases use the base parameter set. The percentages shown with them summarize 400
+     experiments for each process and design, 100 under each of four parameter sets."),
   tags$details(class = "formula-details",
     tags$summary("Code and numerical checks"),
-    P("The learning calculations use <code>shiny_app/R/models.R</code>, an identical
-       copy of <code>R/models.R</code> used in the tutorial. Step 6 uses
-       <code>shiny_app/R/engine.R</code>. <code>tests/verify_app.R</code> checks both
-       against the reported values, including B's learned value of ",
-       num(trained$rw$V_B, 4), " under ", RW, " after compound training, and the
-       adaptive model's B&ndash;D gap of ", num(at(base$adaptive$gap, 8)),
-       " after eight updates."),
-    P("For Step 5, <code>shiny_app/make_inference_cases.R</code> regenerates one
-       experiment of each size per generating process from saved random seeds.
-       It analyzes every design with the study's code and stops if a result
-       disagrees with the corresponding saved study analysis. These cases use the
-       first parameter set.")),
+    P("The learning calculations use <code>shiny_app/R/models.R</code>, an identical copy of
+       <code>R/models.R</code> used in the tutorial. The engine of the page is
+       <code>shiny_app/R/engine.R</code>. <code>tests/verify_app.R</code> checks both against the
+       reported values, including the light's learned value of ", num(rw_tr$V_B_after[20], 4),
+       " after ten compound trials under ", RW, " and the adaptive model's B&ndash;D gap of ",
+       num(at(base$adaptive$gap, 8)), " after eight pear trials."),
+    P("For Steps 5 and 6, <code>shiny_app/make_inference_cases.R</code> regenerates one
+       experiment of each size per generating process from saved random seeds. It analyzes every
+       design with the study's code and stops if a result disagrees with the corresponding saved
+       analysis of the study.")),
   p(HTML(paste0("Code and materials: ",
                 "<a href='https://github.com/kennychechuanyu/thinking_with_simulations' target='_blank'>github.com/kennychechuanyu/thinking_with_simulations</a>.")))
 )
@@ -87,23 +89,11 @@ ui <- page_fixed(
   theme = bs_theme(version = 5, bg = "#FFFFFF", fg = "#252525", primary = "#252525",
                    base_font = font_collection("Charter", "Georgia", "Cambria", "serif"),
                    heading_font = font_collection("Charter", "Georgia", "serif")),
-  title = "Thinking with Models",
+  title = "Thinking with Computational Models",
   tags$head(tags$link(rel = "stylesheet", href = "style.css"),
     tags$script(src = "scenes.js"),
-    # The link in Step 3's matched-control question opens Explore at its results.
-    # It waits until the tab is shown and the starting states have been drawn.
     tags$script(HTML("
       document.addEventListener('DOMContentLoaded', function () {
-        Shiny.addCustomMessageHandler('show_explore', function (m) {
-          document.getElementById('control-e').open = true;
-          var tries = 0;
-          (function scrollWhenDrawn() {
-            var results = document.querySelector('.explore-output');
-            var states = document.getElementById('x_summary');
-            if (results && results.offsetParent !== null && states && states.textContent.trim()) results.scrollIntoView();
-            else if (++tries < 100) setTimeout(scrollWhenDrawn, 50);
-          })();
-        });
         Shiny.addCustomMessageHandler('scroll_top', function (m) {
           var heading = document.querySelector('.opening');
           if (heading) {
@@ -114,11 +104,11 @@ ui <- page_fixed(
         });
       });"))),
   div(class = "masthead",
-    h1("Thinking with Models"),
-    p("Two learning models explain blocking. What would you try next?")),
+    h1("Thinking with Computational Models"),
+    p("One investigation, worked through in seven steps.")),
   navset_underline(id = "tabs",
-    nav_panel("The inquiry", with_notes(tagList(opening_ui(), training_ui(), comparison_ui(),
-      assumptions_ui(), responses_ui(), experiment_ui(), decision_ui()))),
+    nav_panel("The inquiry", with_notes(tagList(opening_ui(), rule_ui(), explanations_ui(),
+      assumptions_ui(), behavior_ui(), experiment_ui(), shared_ui(), measurement_ui()))),
     nav_panel("Explore", explore_ui()),
     nav_panel("About", about))
 )
@@ -133,17 +123,19 @@ server <- function(input, output, session) {
   add_note <- function(...) entries(c(entries(), list(note(...))))
 
   # A logical output read by conditionalPanel. The "..." lets both Shiny and
-  # shiny::testServer call it. The flags that complete Steps 1 to 5 also go
+  # shiny::testServer call it. The flags that complete Steps 1 to 7 also go
   # to scenes.js, which marks the step complete.
+  step_flags <- c("done_q1c", "done_q2d", "done_q3e", "done_q4c", "done_e4", "done_f5", "done_x3")
   flag <- function(name, condition) {
     output[[name]] <- function(...) condition()
     outputOptions(output, name, suspendWhenHidden = FALSE)
-    if (name %in% c("done_q1", "done_q2", "done_q3c", "done_q4b", "done_e6"))
+    if (name %in% step_flags)
       observe(session$sendCustomMessage("scene_done", list(name = name, done = isTRUE(condition()))))
   }
-  # One flag per question, done_q1 and so on: TRUE once it has been answered.
-  for (id in c("q1", "q2", "q2b", "q3a", "q3b", "q3c", "q3d", "q6", "q4a", "q4b",
-               "e_design", "e1", "e2", "e3", "e4", "e5", "e6", "x1", "x2", "x3"))
+  # One flag per question, done_q1a and so on: TRUE once it has been answered.
+  for (id in c("q1a", "q1b", "q1c", "q2a", "q2b", "q2c", "q2d", "q3a", "q3b", "q3c", "q3d",
+               "q3e", "q4a", "q4b", "q4c", "e_design", "e1", "e2", "e3", "e4", "f1", "f2", "f3",
+               "f4", "f5", "x1", "x2", "x3"))
     local({ i <- id; flag(paste0("done_", i), function() !is.null(answers[[i]])) })
 
   output$notes <- renderUI(notes_ui(entries()))
@@ -151,29 +143,23 @@ server <- function(input, output, session) {
     filename = function() paste0("thinking-with-models-notes-", Sys.Date(), ".txt"),
     content = function(file) writeLines(notes_text(entries()), file))
 
-  training <- training_server(input, output, answers, add_note)
-  comparison <- comparison_server(input, output, answers, add_note)
+  rule <- rule_server(input, output, answers, add_note)
+  explanations <- explanations_server(input, output, answers, add_note)
   assumptions <- assumptions_server(input, output, answers, add_note)
-  responses <- responses_server(input, output, answers, add_note)
+  behavior <- behavior_server(input, output, answers, add_note)
   experiment <- experiment_server(input, output, answers, add_note, flag)
-  decision <- decision_server(input, output, answers, add_note)
+  shared <- shared_server(input, output, answers, add_note, flag, experiment)
+  measurement <- measurement_server(input, output, answers, add_note)
   explore <- explore_server(input, output, session)
 
-  # The link in Step 3's matched-control question opens Explore at the default
-  # settings, with E one part in a million more salient than D.
-  observeEvent(input$q6_explore, {
-    explore$defaults()
-    updateRadioButtons(session, "x_e", selected = "1e-6")
-    nav_select("tabs", "Explore", session = session)
-    session$sendCustomMessage("show_explore", TRUE)
-  })
-  # Trying another design or case clears the answers of Steps 5 and 6, since
-  # Step 6 opens only after Step 5. The notes are kept.
-  observeEvent(input$e_again, { experiment$reset(); decision$reset() })
+  # Trying another case or design clears the answers of Steps 5 to 7, since
+  # Step 6 opens only after Step 5 and Step 7 only after Step 6. The notes are
+  # kept.
+  observeEvent(input$e_again, { experiment$reset(); shared$reset(); measurement$reset() })
   # Starting again clears the answers of every step and keeps the notes.
   observeEvent(input$restart, {
-    training$reset(); comparison$reset(); assumptions$reset(); responses$reset()
-    experiment$reset(); decision$reset()
+    rule$reset(); explanations$reset(); assumptions$reset(); behavior$reset()
+    experiment$reset(); shared$reset(); measurement$reset()
     session$sendCustomMessage("scroll_top", TRUE)
   })
 }

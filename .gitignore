@@ -5,10 +5,10 @@ Figures/*.pdf
 Figures/*.aux
 Figures/*.log
 
-# Section 5 job checkpoints, restricted reruns and pilot runs
-results/section5/jobs/
-results/section5/subset/
-results/section5/pilot/
+# Checkpoints of the simulation study, reruns of single experiments and pilot runs
+results/section6/jobs/
+results/section6/subset/
+results/section6/pilot/
 
 # R session files
 .Rhistory

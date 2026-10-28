@@ -61,61 +61,61 @@
 "delta_H8_by_g_V","Rank-based",0.95,-0.0392709040350653
 "delta_H8_by_g_V","Error-difference (main text)",1,-0.0293728986081681
 "delta_H8_by_g_V","Rank-based",1,-0.0495602489714813
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1e-08,0.499999994546345
-"alpha_D_by_S_E_minus_S_D","Rank-based",1e-08,0.5
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1.77827941003892e-08,0.499999990301878
-"alpha_D_by_S_E_minus_S_D","Rank-based",1.77827941003892e-08,0.273659469012322
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",3.16227766016838e-08,0.499999982754029
-"alpha_D_by_S_E_minus_S_D","Rank-based",3.16227766016838e-08,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",5.62341325190349e-08,0.499999969331846
-"alpha_D_by_S_E_minus_S_D","Rank-based",5.62341325190349e-08,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1e-07,0.499999945463456
-"alpha_D_by_S_E_minus_S_D","Rank-based",1e-07,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1.77827941003892e-07,0.499999903018796
-"alpha_D_by_S_E_minus_S_D","Rank-based",1.77827941003892e-07,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",3.16227766016838e-07,0.499999827540353
-"alpha_D_by_S_E_minus_S_D","Rank-based",3.16227766016838e-07,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",5.62341325190349e-07,0.499999693318656
-"alpha_D_by_S_E_minus_S_D","Rank-based",5.62341325190349e-07,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1e-06,0.499999454635185
-"alpha_D_by_S_E_minus_S_D","Rank-based",1e-06,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1.77827941003892e-06,0.499999030189938
-"alpha_D_by_S_E_minus_S_D","Rank-based",1.77827941003892e-06,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",3.16227766016838e-06,0.499998275409774
-"alpha_D_by_S_E_minus_S_D","Rank-based",3.16227766016838e-06,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",5.62341325190349e-06,0.499996933206317
-"alpha_D_by_S_E_minus_S_D","Rank-based",5.62341325190349e-06,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1e-05,0.49999454641432
-"alpha_D_by_S_E_minus_S_D","Rank-based",1e-05,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1.77827941003892e-05,0.499990302096945
-"alpha_D_by_S_E_minus_S_D","Rank-based",1.77827941003892e-05,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",3.16227766016838e-05,0.499982754722474
-"alpha_D_by_S_E_minus_S_D","Rank-based",3.16227766016838e-05,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",5.62341325190349e-05,0.499969334038722
-"alpha_D_by_S_E_minus_S_D","Rank-based",5.62341325190349e-05,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",1e-04,0.499945470390213
-"alpha_D_by_S_E_minus_S_D","Rank-based",1e-04,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.000177827941003892,0.499903040723016
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.000177827941003892,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.000316227766016838,0.499827609684097
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.000316227766016838,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.000562341325190349,0.499693537862193
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.000562341325190349,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.001,0.499455328154392
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.001,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.00177827941003892,0.499032380060932
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.00177827941003892,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.00316227766016838,0.498282328574096
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.00316227766016838,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.00562341325190349,0.496955046270849
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.00562341325190349,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.01,0.494615257922996
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.01,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.0177827941003892,0.490518561527243
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.0177827941003892,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.0316227766016838,0.483432297818708
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.0316227766016838,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.0562341325190349,0.471437862953941
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.0562341325190349,0.253799369815801
-"alpha_D_by_S_E_minus_S_D","Error-difference (main text)",0.1,0.45190743770084
-"alpha_D_by_S_E_minus_S_D","Rank-based",0.1,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",1e-08,0.499999994546345
+"alpha_D_by_S_C_minus_S_D","Rank-based",1e-08,0.5
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",1.77827941003892e-08,0.499999990301878
+"alpha_D_by_S_C_minus_S_D","Rank-based",1.77827941003892e-08,0.273659469012322
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",3.16227766016838e-08,0.499999982754029
+"alpha_D_by_S_C_minus_S_D","Rank-based",3.16227766016838e-08,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",5.62341325190349e-08,0.499999969331846
+"alpha_D_by_S_C_minus_S_D","Rank-based",5.62341325190349e-08,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",1e-07,0.499999945463456
+"alpha_D_by_S_C_minus_S_D","Rank-based",1e-07,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",1.77827941003892e-07,0.499999903018796
+"alpha_D_by_S_C_minus_S_D","Rank-based",1.77827941003892e-07,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",3.16227766016838e-07,0.499999827540353
+"alpha_D_by_S_C_minus_S_D","Rank-based",3.16227766016838e-07,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",5.62341325190349e-07,0.499999693318656
+"alpha_D_by_S_C_minus_S_D","Rank-based",5.62341325190349e-07,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",1e-06,0.499999454635185
+"alpha_D_by_S_C_minus_S_D","Rank-based",1e-06,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",1.77827941003892e-06,0.499999030189938
+"alpha_D_by_S_C_minus_S_D","Rank-based",1.77827941003892e-06,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",3.16227766016838e-06,0.499998275409774
+"alpha_D_by_S_C_minus_S_D","Rank-based",3.16227766016838e-06,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",5.62341325190349e-06,0.499996933206317
+"alpha_D_by_S_C_minus_S_D","Rank-based",5.62341325190349e-06,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",1e-05,0.49999454641432
+"alpha_D_by_S_C_minus_S_D","Rank-based",1e-05,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",1.77827941003892e-05,0.499990302096945
+"alpha_D_by_S_C_minus_S_D","Rank-based",1.77827941003892e-05,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",3.16227766016838e-05,0.499982754722474
+"alpha_D_by_S_C_minus_S_D","Rank-based",3.16227766016838e-05,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",5.62341325190349e-05,0.499969334038722
+"alpha_D_by_S_C_minus_S_D","Rank-based",5.62341325190349e-05,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",1e-04,0.499945470390213
+"alpha_D_by_S_C_minus_S_D","Rank-based",1e-04,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.000177827941003892,0.499903040723016
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.000177827941003892,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.000316227766016838,0.499827609684097
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.000316227766016838,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.000562341325190349,0.499693537862193
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.000562341325190349,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.001,0.499455328154392
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.001,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.00177827941003892,0.499032380060932
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.00177827941003892,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.00316227766016838,0.498282328574096
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.00316227766016838,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.00562341325190349,0.496955046270849
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.00562341325190349,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.01,0.494615257922996
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.01,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.0177827941003892,0.490518561527243
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.0177827941003892,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.0316227766016838,0.483432297818708
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.0316227766016838,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.0562341325190349,0.471437862953941
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.0562341325190349,0.253799369815801
+"alpha_D_by_S_C_minus_S_D","Error-difference (main text)",0.1,0.45190743770084
+"alpha_D_by_S_C_minus_S_D","Rank-based",0.1,0.253799369815801

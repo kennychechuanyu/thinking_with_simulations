@@ -1,9 +1,9 @@
-# Checks of R/inference.R and R/inference.cpp (Section 5, Supplement S2): the
-# compiled probabilities against the reference built from R/models.R, the
-# block order, special cases with known answers, the generator, the views, the
-# response contrast, the mixture likelihood, its continuity at g_V = 0 and
-# d = 0, the starting vectors, fitting, the held-out comparison and its
-# decision rule, and the seeds of parallel runs.
+# Checks of R/inference.R and R/inference.cpp (Sections 6 and 7, Supplement
+# S2): the compiled probabilities against the reference built from R/models.R,
+# the block order, special cases with known results, the generator, the pear
+# trials kept by each analysis, the B-D difference, the likelihood, its
+# continuity at g_V = 0 and d = 0, the starting vectors, fitting, the held-out
+# comparison and its decision rule, and the seeds of parallel runs.
 # Needs Rcpp and a C++ compiler. Stops at the first failure.
 #   Rscript tests/verify_inference.R
 
@@ -21,11 +21,11 @@ local({
   cat("Checks of R/inference.R and R/inference.cpp\n")
   scenarios <- inference_scenarios()
 
-  # Compiled and reference probabilities for every generating scenario and
-  # three physical-cue contrasts; in the adaptive scenarios also for three
-  # associability rates, each with g_V = 0 and g_V = .3, so that carried
-  # learned values are compared too. eta does not enter the fixed-rate
-  # scenarios.
+  # Compiled and reference probabilities for every generating process and
+  # three differences between the physical lights; in the adaptive processes
+  # also for three values of eta, each with g_V = 0 and g_V = .3, so that
+  # carried learned values are compared too. eta does not enter the
+  # Rescorla-Wagner processes.
   for (name in names(scenarios)) {
     par <- scenarios[[name]]$par
     adaptive <- scenarios[[name]]$adaptive
@@ -42,85 +42,88 @@ local({
       check(paste("compiled and reference probabilities agree:", label),
             all_close(inference_prob_cpp(par, adaptive), inference_reference(par, adaptive)))
     }
-    # Section 5.1: a trial with one cue changes only that cue's state, so running
-    # the D block first gives exactly the same probabilities.
+    # Supplement S2.1: a pear trial with one light changes only that light's
+    # state, so running the D block first gives exactly the same probabilities.
     par <- scenarios[[name]]$par
     check(paste("the block order does not change the probabilities:", name),
           identical(inference_prob_cpp(par, adaptive, d_first = TRUE),
                     inference_prob_cpp(par, adaptive)))
   }
 
-  # Special cases with known answers. With tau = d = 0 and g_V = 0, each cue's
-  # first answer precedes that cue's first O2 feedback and has probability
-  # plogis(b). D's higher associability makes its second answer more likely
-  # than B's.
+  # Special cases with known results. With tau = d = 0 and g_V = 0, each
+  # light's first response comes before the pear has appeared with it and has
+  # probability plogis(b). D's higher associability makes its second response
+  # more likely than B's.
   par <- scenarios$associability$par
   par[c("spread", "cue")] <- 0
   prob <- inference_prob_cpp(par, TRUE)
-  check("the first answers to B and D are equal, and D's second is more likely",
+  check("the first responses to B and D are equally likely, and D's second is more likely",
         all_close(prob[, 1], rep(plogis(par[["intercept"]]), 4)) &&
           all_close(prob[, 1], prob[, 11]) && all(prob[, 12] > prob[, 2]))
   par["g_alpha"] <- 0
   prob <- inference_prob_cpp(par, TRUE)
   check("without associability carryover, B and D have the same probabilities",
         all_close(prob[, 1:10], prob[, 11:20]))
-  # Row 1 is allocation -1 and the slower type, so B learns at rate
-  # .5 logistic(mu - tau - d) and follows Equation 3 with beta = 1.
+  # Row 1 is counterbalancing group -1 and the slower type, so B learns with
+  # the fixed learning rate .5 logistic(mu - tau - d), and its value after k pear
+  # trials is 1 - (1 - rate)^k.
   par <- scenarios$null$par
   prob <- inference_prob_cpp(par, FALSE)
   rate <- .5 * plogis(par["mu"] - par["spread"] - par["cue"])
   closed_form <- plogis(par["intercept"] + exp(par["log_slope"]) * (1 - (1 - rate)^(0:9)))
-  check("fixed-rate probabilities follow the closed form of Equation 3",
+  check("Rescorla-Wagner probabilities follow the closed form 1 - (1 - rate)^k",
         all_close(prob[1, 1:10], closed_form))
-  check("counterbalancing cancels the physical-cue difference on average",
+  check("counterbalancing cancels the difference between the physical lights on average",
         all_close(colMeans(prob[, 1:10]), colMeans(prob[, 11:20])))
 
   # The generator. Seeds 519001, 519002 and 519101-519104 lie outside the
   # seeds of the study (610001-613600) and of the pilot (510001-510020).
   experiment <- inference_generate(40, scenarios$associability$par, TRUE, 519001)
-  check("the analyses receive only the answers, the allocation and the training length",
+  check("the analyses receive only the responses, the counterbalancing groups and the training length",
         identical(sort(names(experiment$observed)), sort(c("y", "allocation", "n_train"))))
   check("a seed reproduces its experiment exactly",
         identical(experiment, inference_generate(40, scenarios$associability$par, TRUE, 519001)))
-  check("cue allocation is balanced", sum(experiment$observed$allocation) == 0L)
-  check("within each cue allocation, half the participants receive the D block first",
+  check("the counterbalancing groups are balanced", sum(experiment$observed$allocation) == 0L)
+  check("within each counterbalancing group, half the participants receive the D block first",
         all(table(experiment$observed$allocation, experiment$truth$d_first) == 10L))
-  # Each participant's probabilities are those of their allocation and rate
-  # type: under the null scenario B follows Equation 3 at the rate
-  # .5 logistic(mu + tau z + x_B d), with x_B = allocation.
+  # Each participant's probabilities are those of their counterbalancing group
+  # and learning-rate type: under physical-light differences alone (null), B's
+  # value follows 1 - (1 - r)^k with r = .5 logistic(mu + tau z + x_B d) and
+  # x_B = allocation (Equation S2).
   null_par <- scenarios$null$par
   null_experiment <- inference_generate(40, null_par, FALSE, 519002)
   z <- 2L * null_experiment$truth$type - 3L
   rate_B <- .5 * plogis(null_par[["mu"]] + null_par[["spread"]] * z +
                           null_experiment$observed$allocation * null_par[["cue"]])
-  check("each participant's probabilities for B are those of their allocation and rate type",
+  check("each participant's probabilities for B are those of their group and learning-rate type",
         all_close(null_experiment$truth$probability[, 1:10],
                   plogis(null_par[["intercept"]] + exp(null_par[["log_slope"]]) *
                            (1 - outer(1 - rate_B, 0:9, `^`)))))
   late <- inference_view(experiment$observed, "late")
-  check("the late view hides answers 1-7 to each cue and keeps 8-10",
+  check("analyzing pear trials 8-10 (late) hides the responses on pear trials 1-7 of each light",
         all(is.na(late$y[, c(1:7, 11:17)])) &&
           identical(late$y[, c(8:10, 18:20)], experiment$observed$y[, c(8:10, 18:20)]))
   early <- inference_view(experiment$observed, "early")
-  check("the early view hides answers 7-10 to each cue and keeps 1-6",
+  check("analyzing pear trials 1-6 (early) hides the responses on pear trials 7-10 of each light",
         all(is.na(early$y[, c(7:10, 17:20)])) &&
           identical(early$y[, c(1:6, 11:16)], experiment$observed$y[, c(1:6, 11:16)]))
-  check("the full view keeps every answer",
+  check("analyzing all ten pear trials (full) keeps every response",
         identical(inference_view(experiment$observed, "full"), experiment$observed))
 
-  # The response contrast of Supplement S2 is the average of the two allocation
-  # groups' mean differences, and with balanced groups its interval is half as
-  # wide as Welch's interval for the difference between the groups.
+  # The B-D difference of Supplement S2.6 is the average of the two
+  # counterbalancing groups' mean differences, and with balanced groups its
+  # interval is half as wide as Welch's interval for the difference between the
+  # groups.
   effect <- inference_effect(experiment$observed)
   h <- rowMeans(experiment$observed$y[, 11:20]) - rowMeans(experiment$observed$y[, 1:10])
   allocation <- experiment$observed$allocation
   welch <- t.test(h[allocation == 1L], h[allocation == -1L])
-  check("the response contrast averages the two allocation groups, with half the width of Welch's interval",
+  check("the B-D difference averages the two counterbalancing groups, with half the width of Welch's interval",
         all_close(effect[["estimate"]], mean(tapply(h, allocation, mean))) &&
           all_close(effect[["upper"]] - effect[["lower"]], diff(welch$conf.int) / 2))
 
-  # The mixture likelihood L_s of Supplement S2, computed directly with dbinom
-  # for every participant in each view.
+  # The likelihood L_s of Equation S4, computed directly with dbinom for every
+  # participant and each set of analyzed pear trials.
   par <- scenarios$associability$par
   prob <- inference_prob_cpp(par, TRUE)
   for (view in c("full", "early", "late")) {
@@ -133,14 +136,14 @@ local({
       max(log_terms) + log(sum(exp(log_terms - max(log_terms)))) - log(2)
     }, 0.)
     compiled <- inference_loglik_cpp(par, TRUE, observed$y, observed$allocation)
-    check(paste("mixture likelihood of every participant's answers:", view, "view"),
+    check(paste("the likelihood of every participant's responses, Equation S4:", view),
           all_close(direct, compiled))
   }
 
   # Fitting and the held-out comparison. Turning every yes in fold 2 into a no
   # and every no into a yes must leave the fits to fold 1 unchanged.
   fold <- inference_folds(experiment$observed)
-  check("each fold holds half of each allocation group",
+  check("each fold holds half of each counterbalancing group",
         all(table(fold, experiment$observed$allocation) == 10L))
   flipped <- experiment$observed
   flipped$y[fold == 2L, ] <- 1 - flipped$y[fold == 2L, ]
@@ -163,7 +166,7 @@ local({
   # The fits named *_2 are fitted to the participants outside fold 2.
   flipped_comparison <- inference_compare(flipped, starts = 1L)
   trained_on_fold_1 <- paste0(c("fixed", "reset", "carry"), "_2")
-  check("answers in fold 2 cannot change the fits to fold 1",
+  check("responses in fold 2 cannot change the fits to fold 1",
         identical(comparison$fits[trained_on_fold_1], flipped_comparison$fits[trained_on_fold_1]))
   check("in each fold the carryover fit is at least as good as the reset fit",
         all(vapply(1:2, function(f) {
@@ -171,7 +174,7 @@ local({
             comparison$fits[[paste0("reset_", f)]]$nll + 1e-5
         }, logical(1))))
   # With one starting vector, the third entry of the carryover fit's start_nll
-  # is the reset solution itself, evaluated without a search (Supplement S2).
+  # is the reset solution itself, evaluated without a search (Supplement S2.7).
   check("the reset solution is a candidate of the carryover fit in each fold",
         all(vapply(1:2, function(f) {
           isTRUE(all.equal(comparison$fits[[paste0("carry_", f)]]$start_nll[3],
@@ -179,14 +182,14 @@ local({
         }, logical(1))))
   # The reset solution is a candidate but not a search. With no iterations
   # allowed, no nlminb search converges, so the carryover fit has to be refined
-  # before it counts as converged (Supplement S2).
+  # before it counts as converged (Supplement S2.7).
   unsearched <- inference_fit(inference_subset(experiment$observed, which(fold != 1L)),
                               inference_spec("carry"), starts = 1L, iter_max = 0L,
                               extra_start = comparison$fits$reset_1$par)
   check("the reset solution alone does not count as a converged search",
         unsearched$refined && unsearched$converged)
 
-  # The decision rule of Supplement S2, run through inference_compare() with
+  # The decision rule of Section 6.3, run through inference_compare() with
   # inference_fit() and inference_loglik_cpp() replaced by stand-ins that give
   # four participants chosen held-out log likelihoods. Carryover minus
   # fixed-rate is (1, 1.1, .9, 1), about 24 standard errors, or (-1, 1, 2, 3),
@@ -208,9 +211,9 @@ local({
         decide(clear, clear) == "carry" && decide(-clear, clear) == "no_carry" &&
           decide(narrow, clear) == "unresolved")
 
-  # Equation 8 changes associability in proportion to the difference between
+  # Equation 3 changes associability in proportion to the difference between
   # the errors, so the likelihood is continuous at g_V = 0 and at d = 0
-  # (Supplement S2).
+  # (Supplement S2.2).
   par <- scenarios$associability$par
   loglik_at <- function(changes) {
     changed <- par

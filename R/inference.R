@@ -1,22 +1,23 @@
-# Section 5 and Supplement S2: the simulated experiments, the fixed-rate, reset
-# and carryover candidates with their likelihood and fitting, the response
-# contrast and the two-fold held-out comparison. The learning recursions are
-# compiled from R/inference.cpp; tests/verify_inference.R checks them against
-# inference_reference(), which uses R/models.R. Needs Rcpp and a C++ compiler.
+# Sections 6 and 7 and Supplement S2: the simulated experiments, the
+# fixed-rate, reset and carryover candidates with their likelihood and fitting,
+# the B-D difference with its interval, and the two-fold held-out comparison.
+# The learning recursions are compiled from R/inference.cpp;
+# tests/verify_inference.R checks them against inference_reference(), which
+# uses R/models.R. Needs Rcpp and a C++ compiler.
 source("R/models.R")
-if (!requireNamespace("Rcpp", quietly = TRUE)) stop("Section 5 requires the Rcpp package.")
+if (!requireNamespace("Rcpp", quietly = TRUE)) stop("Sections 6 and 7 require the Rcpp package.")
 Rcpp::sourceCpp("R/inference.cpp", cacheDir = file.path(tempdir(), "inference-cache"))
 
-# Parameters, with their symbols and estimation bounds in Supplement S2:
-#   mu                 mu         baseline rate location        [-3.5, 1]
-#   spread             tau        rate-type offset              [0, 1]
-#   cue                d          physical-cue rate contrast    [-0.65, 0.65]
-#   intercept          b          response intercept            [-8, 2]
-#   log_slope          log gamma  response slope                [log 1.5, log 16]
-#   g_value            g_V        old-value carryover           [0, 1]
-#   eta                eta        associability update rate     [0, .20]
-#   g_alpha            g_alpha    associability carryover       [0, 1]
-#   history_intercept  b_hist     intercept added for cue B     [-2.5, 2.5]
+# Parameters, with their symbols and estimation bounds in Supplement S2.5:
+#   mu                 mu         midpoint of the baselines        [-3.5, 1]
+#   spread             tau        half the distance between types  [0, 1]
+#   cue                d          shift of each physical light     [-0.65, 0.65]
+#   intercept          b          response intercept               [-8, 2]
+#   log_slope          log gamma  response slope                   [log 1.5, log 16]
+#   g_value            g_V        carryover of learned value       [0, 1]
+#   eta                eta        rate of change of associability  [0, .20]
+#   g_alpha            g_alpha    carryover of associability       [0, 1]
+#   history_intercept  b_B        intercept added for B            [-2.5, 2.5]
 inference_names <- c("mu", "spread", "cue", "intercept", "log_slope",
                      "g_value", "eta", "g_alpha", "history_intercept")
 inference_bounds <- rbind(
@@ -25,9 +26,9 @@ inference_bounds <- rbind(
 )
 colnames(inference_bounds) <- inference_names
 
-# The parameters a candidate of Table 4 estimates (Supplement S2).
-# value = FALSE fixes g_V at 0, as in Section 5.6, and response = TRUE also
-# estimates b_hist (the response scenario).
+# The parameters a candidate of Table 7 estimates (Supplement S2.5).
+# value = FALSE fixes g_V at 0, as in the restricted comparison of Section 7.1,
+# and response = TRUE also estimates b_B (Section 7.3).
 inference_spec <- function(model = c("fixed", "reset", "carry"),
                            value = TRUE, response = FALSE) {
   model <- match.arg(model)
@@ -40,19 +41,19 @@ inference_spec <- function(model = c("fixed", "reset", "carry"),
 
 # Reference version of inference_prob_cpp(), built from the simulators in
 # R/models.R. It returns the same matrix of response probabilities: rows are
-# cue allocation -1 (slower, then faster rate type) and allocation +1 (slower,
-# faster); columns are B's presentations, then D's. Training here runs the A,
-# C, AB and DE trials in four blocks, whereas the compiled version alternates A
-# with C and AB with DE; the two conditions share no cues, so either order gives
-# every cue the same sequence of updates.
-inference_reference <- function(par, adaptive, n_train = 10L, n_transfer = 10L) {
+# counterbalancing group -1 (slower, then faster learning-rate type) and group
+# +1 (slower, faster); columns are B's pear trials, then D's. Training here
+# runs the A+, X+, AB+ and CD+ trials in four blocks, whereas the compiled
+# version alternates A+ with X+ and AB+ with CD+; the two histories share no
+# cues, so either order gives every cue the same sequence of updates.
+inference_reference <- function(par, adaptive, n_train = 10L, n_pear = 10L) {
   names(par) <- inference_names
-  cues <- c("A", "B", "C", "D", "E")
+  cues <- c("A", "B", "C", "D", "X")
   training <- c(make_trials("A", 1, n_train, "Phase 1"),
-                make_trials("C", 1, n_train, "Phase 1"),
+                make_trials("X", 1, n_train, "Phase 1"),
                 make_trials(c("A", "B"), 1, n_train, "Phase 2"),
-                make_trials(c("D", "E"), 1, n_train, "Phase 2"))
-  prob <- matrix(NA_real_, 4L, 2L * n_transfer)
+                make_trials(c("C", "D"), 1, n_train, "Phase 2"))
+  prob <- matrix(NA_real_, 4L, 2L * n_pear)
   for (allocation in c(-1L, 1L)) {
     for (type in c(-1L, 1L)) {
       rates <- setNames(.5 * plogis(par["mu"] + type * par["spread"] +
@@ -64,23 +65,23 @@ inference_reference <- function(par, adaptive, n_train = 10L, n_transfer = 10L) 
         value <- extract_final_V(trained) * par["g_value"]
         associability <- .5 + par["g_alpha"] * (extract_final_alpha(trained) - .5)
       } else {
-        trained <- rw_simulate(training, alpha = rates, beta = 1)
+        trained <- rw_simulate(training, beta = rates)
         value <- extract_final_V(trained) * par["g_value"]
       }
       row <- 2L * (allocation == 1L) + (type == 1L) + 1L
       for (cue in c("B", "D")) {
-        transfer <- make_trials(cue, 1, n_transfer, "Phase 3")
+        pear <- make_trials(cue, 1, n_pear, "Phase 3")
         run <- if (adaptive) {
-          adaptive_simulate(transfer, S = 2 * rates, alpha_init = associability, V_init = value,
+          adaptive_simulate(pear, S = 2 * rates, alpha_init = associability, V_init = value,
                             cue_names = cues, eta = par["eta"])
         } else {
-          rw_simulate(transfer, alpha = rates, beta = 1, V_init = value, cue_names = cues)
+          rw_simulate(pear, beta = rates, V_init = value, cue_names = cues)
         }
-        # The values before each presentation's feedback; trial n_transfer + 1
-        # holds those after the last.
-        transfer_values <- run$V[run$cue == cue & run$trial <= n_transfer]
-        col <- seq_len(n_transfer) + (cue == "D") * n_transfer
-        prob[row, col] <- plogis(par["intercept"] + exp(par["log_slope"]) * transfer_values +
+        # The values before each pear trial's outcome; trial n_pear + 1 holds
+        # those after the last.
+        pear_values <- run$V[run$cue == cue & run$trial <= n_pear]
+        col <- seq_len(n_pear) + (cue == "D") * n_pear
+        prob[row, col] <- plogis(par["intercept"] + exp(par["log_slope"]) * pear_values +
                                    (cue == "B") * par["history_intercept"])
       }
     }
@@ -88,53 +89,54 @@ inference_reference <- function(par, adaptive, n_train = 10L, n_transfer = 10L) 
   prob
 }
 
-# One simulated experiment (Section 5.1, Supplement S2): exactly balanced cue
-# allocation, block order balanced within each allocation, an independently
-# drawn rate type for each participant, and yes/no answers drawn from
-# Equation 21, with b_hist added for B as in Equation S2. The seed fixes the
+# One simulated experiment (Section 6.1, Supplement S2): exactly balanced
+# counterbalancing groups (allocation), block order balanced within each group,
+# an independently drawn learning-rate type for each participant, and yes or no
+# responses drawn from Equation S3, which adds b_B for B. The seed fixes the
 # experiment. The analyses receive only $observed; $truth keeps what generated
-# the answers, with the rate types coded 1 (slower) and 2 (faster) and d_first
+# the responses, with the types coded 1 (slower) and 2 (faster) and d_first
 # marking the participants who receive the D block first.
 inference_generate <- function(n, par, adaptive, seed, n_train = 10L,
-                               n_transfer = 10L) {
+                               n_pear = 10L) {
   stopifnot(n >= 4, n %% 2 == 0, length(par) == 9L)
   set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion",
            sample.kind = "Rejection")
   allocation <- sample(rep(c(-1L, 1L), each = n / 2L))
   type <- sample.int(2L, n, replace = TRUE)
-  # Within each allocation, every second participant receives the D block first.
+  # Within each group, every second participant receives the D block first.
   d_first <- ave(seq_len(n), allocation, FUN = seq_along) %% 2L == 0L
   group <- 2L * (allocation == 1L) + type
-  probability <- inference_prob_cpp(par, adaptive, n_train, n_transfer)[group, , drop = FALSE]
+  probability <- inference_prob_cpp(par, adaptive, n_train, n_pear)[group, , drop = FALSE]
   probability[d_first, ] <-
-    inference_prob_cpp(par, adaptive, n_train, n_transfer, TRUE)[group[d_first], , drop = FALSE]
-  y <- matrix(rbinom(length(probability), 1L, as.vector(probability)), n, 2L * n_transfer)
+    inference_prob_cpp(par, adaptive, n_train, n_pear, TRUE)[group[d_first], , drop = FALSE]
+  y <- matrix(rbinom(length(probability), 1L, as.vector(probability)), n, 2L * n_pear)
   list(observed = list(y = y, allocation = allocation, n_train = n_train),
        truth = list(par = par, adaptive = adaptive, type = type, d_first = d_first,
                     probability = probability, seed = seed))
 }
 
-# Views of Supplement S2: the full view keeps presentations
-# 1-10 of each cue, the early view 1-6 and the late view 8-10. The other
-# answers become NA; every feedback trial still updates the learned state.
+# The pear trials whose responses an analysis keeps (Supplement S2.4): all ten
+# of each light (full), pear trials 1-6 (early) or pear trials 8-10 (late). The
+# other responses become NA; every pear trial still updates the learned state.
 inference_view <- function(observed, view = c("full", "early", "late")) {
   view <- match.arg(view)
-  n_transfer <- ncol(observed$y) / 2L
-  keep <- switch(view, full = seq_len(n_transfer), early = seq_len(min(6L, n_transfer)),
-                 late = seq.int(max(1L, n_transfer - 2L), n_transfer))
-  observed$y[, setdiff(seq_len(2L * n_transfer), c(keep, n_transfer + keep))] <- NA_integer_
+  n_pear <- ncol(observed$y) / 2L
+  keep <- switch(view, full = seq_len(n_pear), early = seq_len(min(6L, n_pear)),
+                 late = seq.int(max(1L, n_pear - 2L), n_pear))
+  observed$y[, setdiff(seq_len(2L * n_pear), c(keep, n_pear + keep))] <- NA_integer_
   observed
 }
 
-# Response contrast H-hat^p of Supplement S2: the mean over participants of each
-# participant's mean D-minus-B answer in the view (with balanced allocation,
-# the average of the two allocation groups), and its 95% interval, with the
-# variance computed within each allocation group and Welch-Satterthwaite
-# degrees of freedom. Detection means that the interval lies above zero.
+# The B-D difference H-hat of Section 6.2 and Supplement S2.6: each
+# participant's proportion of yes responses to D minus that to B over the kept
+# pear trials, averaged over participants (with exactly balanced groups, the
+# average of the two counterbalancing groups), and its 95% interval, with the
+# variance computed within each group and Welch-Satterthwaite degrees of
+# freedom. A positive difference is detected when the interval lies above zero.
 inference_effect <- function(observed) {
-  n_transfer <- ncol(observed$y) / 2L
-  y_B <- observed$y[, seq_len(n_transfer), drop = FALSE]
-  y_D <- observed$y[, n_transfer + seq_len(n_transfer), drop = FALSE]
+  n_pear <- ncol(observed$y) / 2L
+  y_B <- observed$y[, seq_len(n_pear), drop = FALSE]
+  y_D <- observed$y[, n_pear + seq_len(n_pear), drop = FALSE]
   difference <- rowMeans(y_D, na.rm = TRUE) - rowMeans(y_B, na.rm = TRUE)
   groups <- split(difference, observed$allocation)
   variance <- vapply(groups, function(x) var(x) / (4 * length(x)), 0.)
@@ -147,7 +149,7 @@ inference_effect <- function(observed) {
     detected = as.numeric(ci[1] > 0))
 }
 
-# Starting vectors of the fits (Supplement S2): four fixed vectors, then the
+# Starting vectors of the fits (Supplement S2.7): four fixed vectors, then the
 # points of a Halton sequence, which spreads the remaining starts evenly over
 # the estimation bounds. The sequence uses base 2, 3, 5, ..., 23 for the
 # parameters in the order of inference_names, so a parameter's starting values
@@ -185,13 +187,13 @@ inference_starts <- function(n, free) {
   starts
 }
 
-# Maximum-likelihood fit of one candidate (Supplement S2): one nlminb search
+# Maximum-likelihood fit of one candidate (Supplement S2.7): one nlminb search
 # from each of `starts` starting vectors (48 by default), keeping the best
 # search, which a Nelder-Mead search refines when nlminb reports no convergence
 # near the best value. A criterion function replaces the negative log
-# likelihood (for the profile likelihood of Section 5.3 and the mimicry fits of
-# Section 5.4), and extra_start adds a start, such as the fitted reset solution
-# for the carryover candidate.
+# likelihood (for the profile likelihood and the mimicry fits of Section 6.4),
+# and extra_start adds a start, such as the fitted reset solution for the
+# carryover candidate.
 inference_fit <- function(observed, spec, starts = 48L, iter_max = 600L,
                           criterion = NULL, extra_start = NULL) {
   free <- spec$free
@@ -236,11 +238,11 @@ inference_fit <- function(observed, spec, starts = 48L, iter_max = 600L,
   good <- vapply(searches, function(x) is.finite(x$objective) && isTRUE(x$convergence == 0L),
                  logical(1))
   objectives <- vapply(searches, `[[`, numeric(1), "objective")
-  # Equation 8 keeps associability within [.01, 1], so the likelihood has kinks
-  # where an associability reaches a bound, and nlminb can stop near the best
-  # value without reporting convergence. If no converged search is within 1e-5
-  # of the smallest value, a Nelder-Mead search refines the best one within the
-  # bounds (Supplement S2), and its result joins the searches.
+  # Associability is kept within [.01, 1] (Equation 3), so the likelihood has
+  # kinks where an associability reaches a bound, and nlminb can stop near the
+  # best value without reporting convergence. If no converged search is within
+  # 1e-5 of the smallest value, a Nelder-Mead search refines the best one within
+  # the bounds, and its result joins the searches.
   refined <- !any(good & objectives <= min(objectives) + 1e-5)
   if (refined) {
     lower <- inference_bounds["lower", free]
@@ -256,10 +258,10 @@ inference_fit <- function(observed, spec, starts = 48L, iter_max = 600L,
     objectives <- c(objectives, searches[[length(searches)]]$objective)
     nested <- c(nested, FALSE)
   }
-  # The fit counts as converged when a converged search is within 1e-5 of the smallest value.
-  # The best converged search or nested solution within 1e-5 is then selected;
-  # if no converged search is that close, the best search is kept and reported
-  # as not converged.
+  # The fit counts as converged when a converged search is within 1e-5 of the
+  # smallest value. The best converged search or nested solution within 1e-5 is
+  # then selected; if no converged search is that close, the best search is
+  # kept and reported as not converged.
   near <- objectives <= min(objectives) + 1e-5
   converged <- any(good & near)
   eligible <- which(near & (good | nested))
@@ -276,9 +278,9 @@ inference_fit <- function(observed, spec, starts = 48L, iter_max = 600L,
        boundary = paste(free[boundary], collapse = ";"), spec = spec)
 }
 
-# Participants are assigned to the folds in turn within each cue-allocation
-# group, so that the two allocations are balanced within each fold
-# (Section 5.2, Supplement S2).
+# Participants are assigned to the folds in turn within each counterbalancing
+# group, so that the two groups are balanced within each fold (Section 6.3,
+# Supplement S2.7).
 inference_folds <- function(observed, folds = 2L) {
   fold <- integer(nrow(observed$y))
   for (allocation in c(-1L, 1L)) {
@@ -294,7 +296,7 @@ inference_subset <- function(observed, rows) {
        n_train = observed$n_train)
 }
 
-# Held-out comparison of the three candidates (Section 5.2, Supplement S2).
+# Held-out comparison of the three candidates (Section 6.3, Supplement S2.7).
 # Each candidate is fitted to the participants outside a fold and scored on
 # that fold; the carryover fit also starts from the reset fit to the same
 # participants.
@@ -329,10 +331,11 @@ inference_compare <- function(observed, value = TRUE, response = FALSE,
   # each other candidate's by more than two participant-level standard errors.
   contrasts <- score_differences(winner, setdiff(models, winner))
   resolved <- all(contrasts[, "difference"] > 2 * contrasts[, "se"])
-  # The decision of Table S2: carryover when it beats both alternatives by this
-  # margin, no associability carryover when either alternative beats it by the
-  # margin, and otherwise unresolved. model_decision is the winner when the
-  # ranking is resolved. A fit that did not converge gives fit_problem.
+  # The decision of the comparison (Section 6.3): carryover when it beats both
+  # alternatives by this margin, no associability carryover when either
+  # alternative beats it by the margin, and otherwise unresolved.
+  # model_decision is the winner when the ranking is resolved. A fit that did
+  # not converge gives fit_problem.
   carry_contrasts <- score_differences("carry", c("fixed", "reset"))
   mechanism <- if (all(carry_contrasts[, "difference"] > 2 * carry_contrasts[, "se"])) {
     "carry"
@@ -348,13 +351,13 @@ inference_compare <- function(observed, value = TRUE, response = FALSE,
        contrasts = contrasts, carry_contrasts = carry_contrasts, fits = fits)
 }
 
-# Generating scenarios of Supplement S2: carried associability
-# (associability), transfer-only adaptation (reset), value generalization
-# (value), physical-cue differences alone (null) and a lower response
-# intercept for B (response). Each is built from the base vector
-# (mu, tau, d, b, gamma, g_V, eta, g_alpha, b_hist) =
-# (logit .30, 0.35, 0.20, -4, 8, 0, .05, .80, 0); analysis/section5_study.R
-# sets the other three configurations of each.
+# Generating processes of Supplement S2.4: carried associability
+# (associability), reset associability (reset), carried learned value (value),
+# physical-light differences alone (null) and a lower response intercept for B
+# (response). Each is built from the base parameter set
+# (mu, tau, d, b, gamma, g_V, eta, g_alpha, b_B) =
+# (logit .30, 0.35, 0.20, -4, 8, 0, .05, .80, 0); analysis/section6_study.R
+# sets the other three parameter sets of each.
 inference_scenarios <- function() {
   baseline <- setNames(c(qlogis(.3), .35, .20, -4, log(8), 0, .05, .8, 0),
                        inference_names)
@@ -365,9 +368,9 @@ inference_scenarios <- function() {
   }
   list(
     associability = scenario(TRUE),
-    # Transfer-only adaptation: associability changes during transfer, but no
-    # part of the earlier associability state crosses the outcome change
-    # (g_alpha = 0). It generates records as the reset candidate assumes.
+    # Reset associability: associability changes during the pear trials, but
+    # nothing that changed during the compound trials carries over
+    # (g_alpha = 0). It generates responses as the reset candidate assumes.
     reset = scenario(TRUE, c(g_alpha = 0)),
     value = scenario(FALSE, c(g_value = .65, eta = 0, g_alpha = 0)),
     null = scenario(FALSE, c(eta = 0, g_alpha = 0)),

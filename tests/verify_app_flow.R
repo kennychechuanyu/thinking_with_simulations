@@ -1,12 +1,13 @@
 # A walk through the companion app (shiny_app/) with shiny::testServer. The
 # checks answer the questions as a reader would and confirm what the app shows
-# next: the four comparisons of Step 2, with the new outcome chosen last and,
-# after starting again, first; the old-value carryover comparison and the two
-# further explorations of Step 3; the response functions of Step 4; the experiment
-# under several designs (both sizes, all three sets of recorded presentations, both orders of
-# the old-value carryover choice); Step 6; starting again; the axis ranges of
-# the contrast and score plots; and the notes with the settings behind each
-# result. Warnings count as failures. Stops at the first failure.
+# next: the result of Box 1, held back until the code has been checked; the four
+# comparisons of Step 2; the changes to the model, the two carryover fractions,
+# the training settings and the rules of Step 3; the response functions of
+# Step 4; the experiment of Steps 5 and 6 under several designs, with and
+# without the first pear trial; Step 7; trying another design; starting again;
+# Explore; the notes with the settings behind each result; and character
+# entities shown literally on the page. Warnings count as failures. Stops at the
+# first failure.
 #   Rscript tests/verify_app_flow.R
 
 local({
@@ -24,23 +25,31 @@ local({
   shown <- function(x) gsub("\\s+", " ", paste(as.character(x$html), collapse = "\n"))
   has <- function(x, ...) all(vapply(c(...), grepl, logical(1), x = shown(x), fixed = TRUE))
   is_png <- function(x) grepl("^data:image/png", x$src)
+  # An output that waits for an earlier answer is not drawn yet.
+  waits <- function(expr) tryCatch({ force(expr); FALSE }, error = function(e) TRUE)
+  # A character entity such as &eta; in text not marked as HTML reaches the
+  # page with its ampersand escaped and is shown literally.
+  escaped <- "&amp;([a-zA-Z]+|#[0-9]+);"
+  # The ids of the outputs whose HTML the server draws.
+  output_ids <- function(html) unlist(regmatches(html,
+    gregexpr('(?<=id=")[^"]+(?="[^>]*class="[^"]*shiny-html-output)', html, perl = TRUE)))
 
   cat("Checks of the companion app flow\n")
   testServer("shiny_app", {
     # The app's own values and helpers, for comparing what it shows.
     app <- parent.env(session$env)
-    for (nm in c("num", "num0", "pct", "prob", "at", "rates", "base", "trained", "more", "co",
-                 "ad_B", "ad_D",
-                 "run_inquiry", "settings_with", "response_prob", "cases", "ddm_summary",
-                 "decision_text", "near_reset_scores", "plot_contrast", "plot_scores",
-                 "plain_text"))
+    for (nm in c("num", "num0", "pct", "prob", "at", "rates", "zero_rates", "first_rates",
+                 "response_rates", "base", "trained", "rw_tr", "checks", "compound", "low_S",
+                 "runs", "ga_half", "gv90", "gv_cross", "rule_runs", "one_percent", "responses",
+                 "cases", "dd", "plain_text", "notes_text", "plot_scores"))
       assign(nm, get(nm, envir = app))
 
     # Inputs that the browser sends when the page loads.
-    session$setInputs(t_model = "adaptive", t_k = 1, gv = .5, ga = .5,
-                      q4_try_rule = "sigmoid", q4_try_time = "1",
+    session$setInputs(t1_trial = 12, t_model = "adaptive", t_k = 1, ga = .5, gv = .5,
+                      n3_compound = 10, n3_eta = .05, r3_rule = "proportional", r3_c = "0",
+                      q4_try_rule = "sigmoid", q4_try_q = 1,
                       x_n2 = 10, x_eta = .05, x_gv = 0, x_ga = 1, x_change = "none",
-                      x_e = "0", x_rule = "sigmoid", x_gamma = 8, x_theta = .5)
+                      x_c = "0", x_rule = "sigmoid", x_gamma = 8, x_theta = .5)
     click <- function(id) {
       now <- isolate(input[[id]])
       do.call(session$setInputs, setNames(list(if (is.null(now)) 1 else now + 1), id))
@@ -49,395 +58,328 @@ local({
     done <- function(id) isTRUE(output[[paste0("done_", id)]])
     last_note <- function() { e <- entries(); e[[length(e)]] }
 
-    # Step 1
-    check("Step 1: the first compound trial shows both models' numbers",
-          has(output$first_trial, num(.2785), num(.0334), ".150", ".500 &rarr; .458"))
-    check("Step 1: exact errors print without decimals",
-          has(output$first_trial, "<td>1<br>") && !has(output$first_trial, "1.000"))
-    check("Step 1: the table after training gives the multipliers",
-          has(output$trained_table, num(trained$adaptive$mult_B), num(trained$adaptive$mult_D)))
-    click("q1_go")
-    check("Step 1: an unanswered question gets a message", has(output$q1_msg, "Choose an answer"))
-    answer("q1", q1_left = "nothing")
-    check("Step 1: the feedback gives the associability difference and Step 2 opens",
-          done("q1") && has(output$q1, num(trained$adaptive$alpha_B),
-                            num(trained$adaptive$mult_B), num(trained$adaptive$mult_D)))
+    page <- as.character(htmltools::renderTags(get("ui", envir = app))$html)
+    check("The page shows no character entity with an escaped ampersand", !grepl(escaped, page))
 
-    # Step 2: the four comparisons
+    # Step 1
+    check("Step 1: the first trials are worked out, with exact values printed as such",
+          has(output$first_trials, ".7215", ".2785", ".0334 each", "A .7549, B .0334") &&
+            grepl("<td>1</td>", shown(output$first_trials), fixed = TRUE))
+    click("q1a_go")
+    check("Step 1: an unanswered question gets a message", has(output$q1a_msg, "Choose an answer"))
+    answer("q1a", q1a_dir = "less", q1a_why = "finished", q1a_reason = "the tone's value")
+    check("Step 1: the expectation is saved and the check of the code opens",
+          done("q1a") && has(output$q1a, "Your expectation is saved") && !done("q1b"))
+    check("Step 1: the note keeps the expectation without the result",
+          last_note()$topic == "Your expectation for the second compound trial" &&
+            is.null(last_note()$result) && grepl("the tone's value", last_note()$answer, fixed = TRUE))
+    check("Step 1: the result waits for the check of the code", waits(output$q1a_result))
+    answer("q1b", q1b_test = "zero")
+    check("Step 1: the check shows all three programs, with .048, .084 and .04224",
+          has(output$q1b, "That test catches a program that updates the tone first",
+              ".048", ".084", ".04224", ".1056"))
+    check("Step 1: the result follows, comparing the reason as well as the direction",
+          has(output$q1a_result, "Your expectation", ".7549", ".7883", ".2117", ".0254",
+              "The direction is right, but the reason is not.", "exactly as much as the light"))
+    e <- entries()
+    check("Step 1: the notes add the check and then the result",
+          e[[length(e) - 1]]$topic == "Checking the code" &&
+            last_note()$topic == "The second compound trial" &&
+            grepl(".2117", last_note()$result, fixed = TRUE))
+    check("Step 1: both plots are drawn", is_png(output$p1_values) && is_png(output$p1_error))
+    session$setInputs(t1_trial = 11)
+    check("Step 1: the trial table works out the first compound trial",
+          has(output$t1_table, "Trial 11", ".7215 + 0 = .7215", "1 &minus; .7215 = .2785",
+              ".12 &times; .2785 = .0334"))
+    session$setInputs(t1_trial = 3)
+    check("Step 1: on a tone-only trial the light is absent",
+          has(output$t1_table, "from the tone alone", "&mdash;"))
+    answer("q1c", q1c_show = "tone")
+    check("Step 1 is complete, and the comparison is corrected",
+          done("q1c") && has(output$q1c, "changes two things at once", "blocking is defined"))
+
+    # Step 2
+    answer("q2a", q2a_first = "less")
+    check("Step 2: the first compound trials, with .458, .117 and .128",
+          done("q2a") && has(output$q2a, "That is what Rescorla", ".458", ".117", ".128",
+                             "Mackintosh proposed that associability falls"))
+    check("Step 2: the table after the compound trials gives the learned values only",
+          has(output$trained_table, num(trained$adaptive$V_B), num(trained$rw$V_D)) &&
+            !has(output$trained_table, "learning rate"))
+    answer("q2b", q2b_left = "nothing")
+    check("Step 2: the feedback gives the learning rates and the check with salience .24",
+          done("q2b") && has(output$q2b, "changes more than learned value",
+                             num(trained$adaptive$rate_B), num(trained$adaptive$rate_D),
+                             num(low_S$adaptive$alpha_B), num(low_S$adaptive$rate_B)))
     click("cmp_go_1")
-    check("Step 2: a comparison must be chosen first",
-          has(output$cmp_msg, "Choose a comparison first."))
+    check("Step 2: a comparison must be chosen first", has(output$cmp_msg, "Choose a comparison first."))
     session$setInputs(cmp_choice_1 = "cont", cmp_reason_1 = "   "); click("cmp_go_1")
     check("Step 2: a reason is required before the result",
-          has(output$cmp_msg, "Add a sentence") && !has(output$cmp, "Ten more trials with O1"))
+          has(output$cmp_msg, "Add a sentence") && !has(output$cmp, "Ten more trials with the apple"))
     session$setInputs(cmp_choice_1 = "cont", cmp_reason_1 = "B and D already differ.")
     click("cmp_go_1")
-    check("Step 2: continuing with O1 draws both plots",
+    check("Step 2: continuing with the apple draws both plots",
           is_png(output$p_cont_curves) && is_png(output$p_cont_gap) &&
-            has(output$cmp, "Ten more trials with O1", "Does this comparison isolate"))
-    check("Step 2: Step 3 stays closed after an uninformative comparison", !done("q2"))
+            has(output$cmp, "Ten more trials with the apple", "Does this comparison isolate"))
     session$setInputs(cmp_tells_cont = "yes"); click("cmp_check_cont")
-    check("Step 2: the numerical differences are noted without isolating the history effect",
-          
-          has(output$cmp, "numerical predictions differ", "mixes the starting-value difference",
-              "Choose another comparison"))
-    check("Step 2: the note records the comparison and its result",
-          grepl("Keep training B and D", last_note()$question) &&
-            grepl(num(at(co$adaptive$gap, 10)), last_note()$result, fixed = TRUE))
+    check("Step 2: the comparison is explained and another can be chosen",
+          has(output$cmp, "mixes these two influences", "Choose another comparison") &&
+            last_note()$topic == "Comparison tried")
     click("cmp_another")
     check("Step 2: only the untried comparisons are offered",
-          has(output$cmp, 'value="more"', 'value="across"', 'value="new"') && !has(output$cmp,
-                                                                                   'value="cont"'))
-    session$setInputs(cmp_choice_2 = "more",
-                      cmp_reason_2 = "Perhaps the extra trials separate the predictions.")
-    click("cmp_go_2")
-    check("Step 2: more training shows 10 and 30 trials for both models",
-          has(output$cmp, num(more$rw$V_B), num(more$adaptive$V_D)))
-    session$setInputs(cmp_tells_more = "no"); click("cmp_check_more")
-    check("Step 2: blocking persists without isolating the effect",
-          has(output$cmp, "preserved blocking", "cannot separate"))
-    click("cmp_another")
-    session$setInputs(cmp_choice_3 = "across", cmp_reason_3 = "Compare the numerical predictions.")
-    click("cmp_go_3")
-    session$setInputs(cmp_tells_across = "no"); click("cmp_check_across")
-    check("Step 2: the cross-model comparison is traced to the error each model uses",
-          has(output$cmp, "models use different errors and different learning rates"))
-    click("cmp_another")
-    session$setInputs(cmp_choice_4 = "new",
-                      cmp_reason_4 = "Equal starting values might isolate learning rate.")
-    click("cmp_go_4")
-    check("Step 2: the new outcome opens the prediction and offers no further comparison",
-          has(output$cmp, "What do you expect each model to predict?") &&
-            !has(output$cmp, "Choose another comparison"))
-    answer("q2", q2_rw = "pos", q2_ad = "pos", q2_why = "start")
-    check("Step 2: both predictions judged, the reason corrected",
-          done("q2") && has(output$q2, "gap is zero after every update", "D learns faster at first",
-                                      "Both cues start at 0 for O2",
-                                          "advantage comes from associability"))
-    check("Step 2: the plots render", is_png(output$p2_curves) && is_png(output$p2_gap))
+          has(output$cmp, 'value="more"', 'value="across"', 'value="pear"') &&
+            !has(output$cmp, 'value="cont"'))
+    session$setInputs(cmp_choice_2 = "pear", cmp_reason_2 = "Equal starting values."); click("cmp_go_2")
+    check("Step 2: the pear opens Box 2 and no further comparison is offered",
+          has(output$cmp, "most favorable to telling the models apart", "10 B alone") &&
+            !has(output$cmp, "Choose another comparison") && last_note()$topic == "Comparison chosen")
+    answer("q2c", q2c_rw = "less", q2c_ad = "equal", q2c_why = "start")
+    check("Step 2: Box 2 corrects each wrong answer and gives .071, .150 and .079",
+          done("q2c") && has(output$q2c, "You expected B to gain less under",
+                              "You expected equal gains under the adaptive model",
+                              "Both lights start the pear trials at zero", ".071", ".150", ".079"))
+    check("Step 2: the pear plots are drawn", is_png(output$p2_curves) && is_png(output$p2_gap))
     session$setInputs(t_model = "adaptive", t_k = 9)
-    check("Step 2: the ninth update shows B gaining more than D",
-          grepl("B gains more than D", shown(output$trial_note)) &&
-            has(output$trial_table, "Update 9", num(at(ad_B$gain, 8)), num(at(ad_D$gain, 8))))
+    check("Step 2: inside the ninth pear trial, B gains more and the gap narrows",
+          has(output$trial_table, "Pear trial 9", num(at(base$adaptive$B$gain, 8))) &&
+            has(output$trial_note, "B gains more than D, so the gap narrows"))
     session$setInputs(t_model = "rw")
-    check("Step 2: the RW table has no separately updated associability",
-          has(output$trial_table, "<td>—</td>"))
-    session$setInputs(t_model = "adaptive")
-    answer("q2b", q2b_n = "stop")
-    check("Step 2: the narrowing question is answered",
-          done("q2b") && has(output$q2b, "D keeps learning"))
+    check("Step 2: under Rescorla-Wagner the lights gain the same",
+          has(output$trial_note, "B and D gain the same"))
+    answer("q2d", q2d_n = "overtake")
+    check("Step 2 is complete; the gap stays positive and the choices are listed",
+          done("q2d") && has(output$q2d, "B never overtakes D", ".051", ".048", ".337", ".265"))
 
-    # Step 3: core comparison, then the two further explorations
-    answer("q3a", q3a_claim = "none")
-    check("Step 3: the conclusion is saved before the core carryover comparison",
-          done("q3a") && !done("q3b") && !done("q3c"))
-    answer("q3b", q3b_dir = "zero", q3b_when = "after", q3b_reason = "D starts higher.")
-    check("Step 3: the old-value prediction is corrected",
-          has(output$q3b, "two unequal O1 values", "Carryover sets the values before learning",
-              "The gap is there before any O2 feedback"))
-    session$setInputs(gv = .5)
-    r5 <- run_inquiry(settings_with(g_V = .5))
-    check("Step 3: the slider text gives both models' gaps",
-          has(output$gv_text, paste0("already ", num(at(r5$rw$gap, 0)), " under"),
-              paste0("and ", num(at(r5$adaptive$gap, 0)), " under the adaptive model"),
-              paste0("the gaps are ", prob(at(r5$rw$gap, 8)), " ("),
-              paste0("and ", num(at(r5$adaptive$gap, 8)), " (adaptive model)")) &&
-            is_png(output$p3_gap) && is_png(output$p3_grid))
-    check("Step 3: the gaps are equal at g_V = .895, as in Section 4.3",
-          has(output$gv_text, "Above about", ".895,"))
-    check("Step 4 stays closed before the revised conclusion", !done("q3c"))
-    answer("q3c", q3c_rev = "keep", q3c_reason = "My version.")
-    check("Step 3: keeping 'cannot be told apart' explains the two sources of a gap",
-          done("q3c") && has(output$q3c, "both start with a gap", "when the gap first appears"))
-    n3 <- last_note()
-    check("Step 3: the revised-conclusion note records the g_V examined and both sets of gaps",
-          grepl("g_V = .5", n3$result, fixed = TRUE) &&
-            grepl(num(at(base$adaptive$gap, 8)), n3$result, fixed = TRUE) &&
-            grepl("Your own version: My version.", n3$answer, fixed = TRUE))
-    half <- run_inquiry(settings_with(g_alpha = .5))
-    answer("q3d", q3d_h = "gone")
-    check("Step 3: half carryover halves the first gap",
-          has(output$q3d, num(at(half$adaptive$gap, 1)), num(half$start$alpha_B),
-              "specified separately"))
-    session$setInputs(ga = .25)
-    quarter <- run_inquiry(settings_with(g_alpha = .25))
-    check("Step 3: the associability slider text follows the engine",
-          has(output$ga_text, num(quarter$start$alpha_B), prob(at(quarter$adaptive$gap, 8))) &&
-            is_png(output$p3_ga))
-    up <- run_inquiry(settings_with(e_offset = 1e-6))
-    down <- run_inquiry(settings_with(e_offset = -1e-6))
-    salience_row <- function(label, r) {
-      paste0("<td>", label, "</td> <td>", num(r$trained$adaptive$alpha_D), "</td> <td>",
-             num(at(r$adaptive$gap, 8)), "</td>")
-    }
-    answer("q6", q6_c = "smaller")
-    check("Step 3: the matched-control test corrects the answer and gives a row for each salience",
-          has(output$q6, "in proportion to the difference", "The gap stays about the same",
-              salience_row("Same as D", base), salience_row("One part in a million higher", up),
-              salience_row("One part in a million lower", down)))
-    # testServer does not apply input updates, so record what the Explore link sends.
-    # The stubs go in the environment where the files in R/ were sourced, which app.R also sees.
-    shared <- parent.env(app)
-    sent <- list()
-    assign("updateRadioButtons", function(session, inputId, ..., selected = NULL)
-      sent[[inputId]] <<- selected, envir = shared)
-    assign("nav_select", function(id, selected = NULL, session) sent[[id]] <<- selected,
-           envir = shared)
-    click("q6_explore")
-    rm("updateRadioButtons", "nav_select", envir = shared)
-    check("Step 3: the Explore link selects E more salient and opens Explore",
-          identical(sent$x_e, "1e-6") && identical(sent$x_change, "none") && identical(sent$tabs,
-                                                                                       "Explore"))
+    # Step 3
+    answer("q3a", q3a_pr = "gone", q3a_supply = "same")
+    check("Step 3: the interventions, with .803, .122, .012, .192 and .068",
+          done("q3a") && has(output$q3a, ".803", ".122", ".012", ".192", ".068",
+                             "The two runs agree only at first."))
+    check("Step 3: the four runs are drawn", is_png(output$p3_runs))
+    session$setInputs(ga = 0)
+    check("Step 3: with no associability carryover the gap is zero",
+          has(output$ga_text, "associability .500 and D with .500", "The gap is 0 after the first"))
+    session$setInputs(ga = .5)
+    check("Step 3: half associability carryover gives .368 and a first gap of .040",
+          has(output$ga_text, ".368", ".040"))
+    answer("q3b", q3b_claim = "support")
+    check("Step 3: the conclusion is saved and Box 3 follows",
+          done("q3b") && last_note()$topic == "Your conclusion so far")
+    answer("q3c", q3c_ahead = "B", q3c_gains = "D", q3c_after = "B")
+    check("Step 3: Box 3 corrects all three answers and gives .104 and .064",
+          done("q3c") && has(output$q3c, "keeps their order", "B gains more, because it starts lower.",
+                             "D still has the higher value", ".104", ".064",
+                             "largest before the first pear trial"))
+    session$setInputs(gv = 0)
+    check("Step 3: with g_V = 0 neither model has a gap before the first pear trial",
+          has(output$gv_text, "neither model has a gap before the first pear trial"))
+    session$setInputs(gv = .9)
+    check("Step 3: with g_V = .9, .304 before the first pear trial and .109 and .108 after eight",
+          has(output$gv_text, ".304", ".109", ".108", num(gv_cross)) && is_png(output$p3_grid) &&
+            is_png(output$p3_gap))
+    check("Step 3: the earlier conclusion is shown before it is kept or changed",
+          has(output$q3d_claim, "Earlier you chose this conclusion", "supports the adaptive model"))
+    answer("q3d", q3d_rev = "keep")
+    check("Step 3: keeping the conclusion is answered with the crossing at .895",
+          done("q3d") && has(output$q3d, "Your earlier conclusion", num(gv_cross),
+                             "no longer favors the adaptive model") &&
+            grepl("g_V = .9", last_note()$result, fixed = TRUE))
+    session$setInputs(n3_compound = 10, n3_eta = .01)
+    check("Step 3: with eta = .01 the gap is largest after six pear trials, at .037",
+          has(output$n3_text, "largest after six pear trials, at about .037") &&
+            is_png(output$p3_training))
+    session$setInputs(n3_compound = 1, n3_eta = .05)
+    check("Step 3: one compound trial is named in the singular",
+          has(output$n3_text, "With 1 compound trial and"))
+    answer("q3e", q3e_prop = "smaller", q3e_rank = "same")
+    check("Step 3: the rules table gives .254, .213 (5), .017 (6) and none",
+          done("q3e") && has(output$q3e, ".254", ".213 (5)", ".017 (6)", "no gap", ".498",
+                             "follows the size of the difference", "changes associability by the full step"))
+    session$setInputs(r3_rule = "rank", r3_c = "1e-6")
+    check("Step 3: comparing the rules freely, the rank-based rule with a tiny mismatch",
+          has(output$r3_text, "is .254", ".017") && is_png(output$p3_rule))
+    session$setInputs(r3_rule = "rank_ties", r3_c = "0")
+    check("Step 3: ties that lower associability leave no gap", has(output$r3_text, "There is no gap."))
 
-    # Step 4: the response functions
-    sig <- function(k) response_prob(at(ad_D$V, k), "sigmoid") - response_prob(at(ad_B$V, k),
-                                                                               "sigmoid")
-    answer("q4a", q4a_rule = "sigmoid", q4a_time = "1", q4a_dir = "same", q4a_peak = "6")
-    check("Step 4: the first answer has equal probabilities; the sixth the largest difference",
-          has(output$q4a, "the same probability of a yes for both cues",
-              prob(sig(5)), "largest at the sixth"))
-    check("Step 4: the note carries rule, slope, midpoint and presentation",
-          grepl("sigmoid, gamma = 8, theta = .5; presentation 1", last_note()$settings,
-                fixed = TRUE))
-    answer("q4b", q4b_more = "yes")
-    check("Step 4: equal learned values leave nothing for more participants to reveal",
-          has(output$q4b, "no difference for more participants to reveal"))
-    n_before <- length(entries())
-    session$setInputs(q4_try_rule = "threshold", q4_try_time = "6"); click("q4_try_go")
-    session$setInputs(q4_try_rule = "threshold", q4_try_time = "10"); click("q4_try_go")
-    check("Step 4: extra tries show their results and add notes",
-          has(output$q4_tries, "Threshold", "unrounded values", "<td>1</td>", "<td>0</td>") &&
-            length(entries()) == n_before + 2)
+    # Step 4
+    answer("q4a", q4a_likely = "value", q4a_must = "yes")
+    check("Step 4: Box 4 corrects both answers and gives .184 and .631",
+          done("q4a") && has(output$q4a, "A learned value is not a probability",
+                             "Only a deterministic rule, such as a threshold at .5", ".184", ".631", ".253", ".447"))
+    check("Step 4: before the next question, Table 6 shows the learned values only",
+          has(output$resp_table, ".314 / .567") && !has(output$resp_table, ".184 / .631") &&
+            is_png(output$p4_functions))
+    check("Step 4: Table 6 rounds D's exact .2775 up, as the paper does",
+          has(output$resp_table, ".136 / .278"))
+    answer("q4b", q4b_rule = "threshold", q4b_peak = "6")
+    check("Step 4: the threshold rule's difference is largest on pear trial 6",
+          done("q4b") && has(output$q4b, "is 0 on pear trial 1, 1 on pear trial 6 and 0 on pear trial 10",
+                              "only on pear trials 6 to 9") &&
+            is_png(output$p4_differences))
+    check("Step 4: Table 6 then shows the yes probabilities and the threshold responses",
+          has(output$resp_table, ".184 / .631", "no / yes", "yes / yes"))
+    answer("q4c", q4c_sig = "no", q4c_thr = "yes")
+    check("Step 4 is complete, with both answers corrected",
+          done("q4c") && has(output$q4c, "estimate that difference more precisely",
+                              "add only more yes responses", ".553", ".921"))
+    session$setInputs(q4_try_rule = "threshold", q4_try_q = 7); click("q4_try_go")
+    check("Step 4: a further try is added to the table and the notes",
+          has(output$q4_tries, "Threshold", "<td>7</td>") && last_note()$topic == "Another function or response")
 
-    # Step 5: the experiment, late records first
-    design <- function(set, n, rec) cases[[set]][[n]]$designs[[rec]]
-    answer("e_design", e_design_set = "value", e_design_n = "160", e_design_rec = "late",
-           e_design_reason = "   ")
-    check("Experiment: the recorded presentations need a reason before results appear",
-          
-          !done("e_design") && has(output$e_design_msg, "Write a sentence"))
-    answer("e_design", e_design_set = "value", e_design_n = "160", e_design_rec = "late",
-           e_design_reason = "Late responses show how much learning remains near the end.")
-    check("Experiment: the design line and the records appear",
-          done("e_design") && has(output$e_design_line, "Case 1", "160 participants", "8–10") &&
-            is_png(output$e_records) && is_png(output$e_contrast))
-    effect <- design("value", "160", "late")$effect
-    check("Experiment: the effect is the saved estimate for this design",
-          has(output$e_effect, num(effect[["estimate"]]), num(effect[["lower"]]),
-              "lies above zero"))
+    # Step 5, with the first case, 160 participants and all ten pear trials
+    session$setInputs(e_design_set = "value")
+    answer("e_design", e_design_n = "160", e_design_rec = "full", e_design_reason = "")
+    check("Step 5: the design needs a reason", !done("e_design") &&
+            has(output$e_design_msg, "Write a sentence"))
+    answer("e_design", e_design_n = "160", e_design_rec = "full",
+           e_design_reason = "To see when the difference appears.")
+    cs <- cases$value[["160"]]; des <- cs$designs$full
+    check("Step 5: the design is run and noted with its seed",
+          done("e_design") && has(output$e_case, "Case 1") &&
+            grepl(paste0("seed = ", cs$seed), last_note()$settings, fixed = TRUE))
+    check("Step 5: the responses and each participant's difference are drawn",
+          is_png(output$e_records) && is_png(output$e_participants))
+    check("Step 5: the mean difference and its interval are reported",
+          has(output$e_effect, num(des$effect[["estimate"]]), num(des$effect[["lower"]]),
+              "is detected in this sample"))
     answer("e1", e1_e = "assoc")
-    check("Experiment: over-reading the records is corrected",
-          has(output$e1, "does not say which process"))
-    answer("e2", e2_policy = "estimated", e2_reason = "")
-    scores <- design("value", "160", "late")$scores$estimated
-    check("Experiment: the scores and decision for the late design, g_V estimated",
-          has(output$e2_result, num0(scores$difference[scores$against == "fixed"], 1),
-              paste0("Under the stated rule, the comparison ",
-                     decision_text[[design("value", "160", "late")$decision$estimated]])) &&
-            is_png(output$e2_plot_estimated) && !isTRUE(output$e_seen_zero))
-    check("Experiment: the other choice is offered before the next question",
-          has(output$e2_other_link, "fixed at 0") && !done("e3"))
-    click("e2_other")
-    check("Experiment: the g_V = 0 result is shown, run for this page",
-          isTRUE(output$e_seen_zero) && has(output$e2_result,
-                                            "run for this page with the study's code"))
-    answer("e3", e3_which = "yes")
-    check("Experiment: the ranking question does not reveal the source",
-          done("e3") && has(output$e3, "separate question") &&
-            !grepl("generalization|Carried associability|generated by", shown(output$e3)))
-    answer("e4", e4_f = "carry")
-    check("Experiment: the shared prediction is explained",
-          has(output$e4, "predicts equal first-answer probabilities too"))
-    check("Experiment: late records cannot make the first-answer check; the reveal opens",
-          
-          has(output$e_first, "begin at presentation 8",
-              "cannot be made") && is.null(output$e5_box$html) &&
-            isTRUE(output$e_revealed))
-    check("Experiment: the reveal names the process and the late-design rates",
-          has(output$e_truth, "Value generalization") && is_png(output$e_contrast_truth) &&
-            has(output$e_rates, "8–10 (your design)", "74.0%", "the first parameter set",
-                "four generating parameter sets", "100 experiments"))
-    session$setInputs(e6_pick = c("1", "4")); click("e6_go")
-    check("Experiment: the conclusions are judged against this design, and Step 6 opens",
-          done("e6") && has(output$e6, "1. The estimated D-minus-B", "You selected this",
-                            num(effect[["estimate"]])) &&
-            has(output$e6, "did not include the first presentation"))
-    check("Experiment: the completed notes preserve generating parameters and the seed",
-          grepl("Generating parameters: mu =", last_note()$settings, fixed = TRUE) &&
-            grepl("seed = 610005", last_note()$settings, fixed = TRUE))
-
-    # The experiment again: full records, g_V fixed at 0 first, all three cases
-    for (set in c("value", "associability", "reset")) {
-      click("e_again")
-      check(paste0("Again (", set, "): starts with no answers"),
-            !done("e_design") && !done("e1") && !done("e6") && !isTRUE(output$e_seen_zero))
-      answer("e_design", e_design_set = set, e_design_n = "160", e_design_rec = "full",
-             e_design_reason = "Keep initial expectations and the full learning curve.")
-      full <- design(set, "160", "full")
-      answer("e1", e1_e = if (full$effect[["detected"]] == 1) "more" else "none")
-      check(paste0("Again (", set, "): reading of the records matches detection"),
-            has(output$e1, num(full$effect[["estimate"]]),
-                if (full$effect[["detected"]] == 1) "The interval lies above zero."
-                else if (full$effect[["upper"]] < 0) "The interval lies below zero"
-                else "The interval includes zero"))
-      answer("e2", e2_policy = "zero", e2_reason = "")
-      check(paste0("Again (", set, "): the g_V = 0 result gives the saved decision"),
-            isTRUE(output$e_seen_zero) &&
-              has(output$e2_result, paste0("Under the stated rule, the comparison ",
-                                           decision_text[[full$decision$zero]])) &&
-              has(output$e2_result, "run for this page") == (set == "reset"))
-      if (set == "reset") check("Again: a near tie is explained only when there is one",
-            has(output$e2_result, "nearly identical held-out scores") ==
-              near_reset_scores(full$scores$zero))
-      answer("e3", e3_which = "not")
-      answer("e4", e4_f = "equal")
-      check(paste0("Again (", set, "): the first-answer check is shown"),
-            has(output$e_first, "Yes to D, no to B") && has(output$e5_box, 'id="e5"') &&
-              has(output$e5, "What does this check tell you?") && !isTRUE(output$e_revealed))
-      rejected <- full$first$p < .05
-      answer("e5", e5_h = "consistent")
-      check(paste0("Again (", set, "): the check is judged"),
-            isTRUE(output$e_revealed) &&
-              has(output$e5, if (rejected) "rejects equal" else "finds no clear evidence"))
-      check(paste0("Again (", set, "): the reveal names the process"),
-            has(output$e_truth, c(value = "Value generalization",
-                                  associability = "Carried associability",
-                                  reset = "Transfer-only adaptation")[[set]]))
-      session$setInputs(e6_pick = character(0)); click("e6_go")
-      check(paste0("Again (", set, "): conclusions explained with none selected"),
-            done("e6") && has(output$e6, "You left this out"))
-      check(paste0("Again (", set, "): statement 5 is marked supported"),
-            grepl("The proportion of experiments reaching a model preference varied across the six designs. Supported.",
-                  last_note()$result, fixed = TRUE))
-      if (set == "reset") {
-        reset_rates <- rates[rates$scenario == "reset", ]
-        preferences <- reset_rates$carry + reset_rates$no_carry
-        check("Again: the feedback says a preference can arise by chance",
-              has(output$e6, pct(min(preferences)), pct(max(preferences)), "finite random samples",
-                  "most common outcome"))
-      }
-    }
-    click("e_again")
-    answer("e_design", e_design_set = "associability", e_design_n = "40", e_design_rec = "early",
-           e_design_reason = "The first six preserve the onset of learning.")
-    answer("e1", e1_e = "more"); answer("e2", e2_policy = "estimated", e2_reason = "")
-    check("Again: 40 participants with the first six leave the comparison unresolved",
-          has(output$e2_result, "Under the stated rule, the comparison is unresolved"))
-    click("e2_other"); answer("e3", e3_which = "not"); answer("e4", e4_f = "equal")
-    check("Again: early records include the first answer", has(output$e_first, "Yes to D, no to B"))
-    answer("e5", e5_h = "value")
-    check("Again: 'old values carried over' is corrected", has(output$e5, "cannot show that"))
-    check("Again: the rates table marks the early design",
-          has(output$e_rates, "1–6 (your design)"))
-    session$setInputs(e6_pick = c("4", "5")); click("e6_go")
-    check("Again: the repeated-experiment statement is supported",
-          grepl("The proportion of experiments reaching a model preference varied across the six designs. Supported.",
-                last_note()$result, fixed = TRUE))
+    check("Step 5: an explanation read off the responses is corrected",
+          done("e1") && has(output$e1, "explanations to compare"))
+    answer("e2", e2_est = "yes", e2_look = "last")
+    check("Step 5: Box 5 corrects both answers", done("e2") &&
+            has(output$e2, "does not show where it came from", "By the last pear trials"))
+    check("Step 5: the differences by pear trial, with the first pear trial reported",
+          is_png(output$e_contrast) && has(output$e_contrast_text, "On the first pear trial",
+                                           num(des$by_trial$estimate[1])))
+    answer("e3", e3_pref = "process")
+    check("Step 5: a preference is not read as the process at work",
+          done("e3") && has(output$e3, "may be missing from the candidates") &&
+            has(output$e_scores_text, "Under the decision rule, the comparison is unresolved"))
+    answer("e4", e4_which = "identify")
+    check("Step 5: the rates for this design, under all three processes",
+          has(output$e_rates, "carried associability", "carried learned value",
+              "reset associability", pct(rates$carry[rates$scenario == "associability" &
+                                                       rates$n == 160 & rates$view == "full"]),
+              "(yours)", "Fixed-rate or reset favored"))
+    check("Step 5 is complete, with 59.5%, 0.5% and 21.2%",
+          done("e4") && has(output$e4, "Detecting a difference was the easier task",
+                            "59.5%", "0.5%", "21.2%", "800 responses"))
 
     # Step 6
+    answer("f1", f1_which = "all")
+    check("Step 6: the restricted comparison of this case favors associability carryover",
+          done("f1") && has(output$f1, "no way to make B and D differ") &&
+            has(output$f1_result, "favors associability carryover", "With <i>g</i><sub>V</sub> estimated"))
+    check("Step 6: the study's rates for the restricted comparison",
+          has(output$f1_rates, "96.8%", "59.5%", "95.0%", "0.0%") && is_png(output$f_scores_zero))
+    answer("f2", f2_first = "carry", f2_rank = "yes")
+    check("Step 6: Box 6 corrects both answers", done("f2") &&
+            has(output$f2, "predicts equal first responses too", "cannot favor any one of them"))
+    check("Step 6: the first responses are counted and tested",
+          has(output$f_first, "Yes to D, no to B", "McNemar", "p &lt; .001"))
+    check("Step 6: the process is revealed only after the check", !isTRUE(output$f_revealed))
+    answer("f3", f3_h = "consistent")
+    check("Step 6: missing a rejection is corrected", done("f3") &&
+            has(output$f3, "rejects the shared prediction") && isTRUE(output$f_revealed))
+    check("Step 6: the process is revealed with the case's own results",
+          has(output$f_truth, "Carried learned value.", "65%", "the first experiment of this kind in the base parameter set",
+              "light 1 more salient") && is_png(output$f_contrast_truth))
+    check("Step 6: the first-response check across the study",
+          has(output$f_check_rates, "1.5%", "2.2%", "94.8%", "95.3%", "380"))
+    answer("f4", f4_explain = "responding")
+    check("Step 6: a difference from responding is attributed to learning",
+          done("f4") && has(output$f4, "100.0%", "68.0%", "7.2%", "90.0%", "10.5%", "82.0%"))
+    session$setInputs(f5_pick = c("1", "4")); click("f5_go")
+    check("Step 6 is complete; each statement is judged",
+          done("f5") && has(output$f5, "Your results support it.", "Your results do not support it.",
+                            "A decision is not the same as a correct decision"))
+    check("Step 6: the note names the generating process",
+          grepl("Generating process: carried learned value", last_note()$result, fixed = TRUE))
+
+    # Step 7
     answer("x1", x1_more = "yes")
-    check("Step 6: more accuracy data cannot separate the settings",
-          has(output$x1, "Accuracy depends"))
-    answer("x2", x2_rec = "conf", x2_longer = "second")
-    check("Step 6: the decision times are revealed with both means",
-          has(output$x2, "first setting", num(ddm_summary()$mean[1], 2), num(ddm_summary()$mean[2],
-                                                                             2)) &&
-            is_png(output$p_ddm))
-    answer("x3", x3_reason = "  ")
-    check("Step 6: the open challenge requires the reader's own reasoning",
-          !done("x3") && has(output$x3_msg, "Write a sentence"))
-    answer("x3", x3_reason = "Perception and movement could take longer even with the same drift.")
-    check("Step 6: the challenge saves the reader's words before revealing a discussion",
-          done("x3") && grepl("Perception and movement", last_note()$answer, fixed = TRUE) &&
-            has(output$x3, "nondecision time", "Wider boundaries") &&
-            has(output$x3_prompt, "lower drift rate"))
+    check("Step 7: equal accuracy, .646", done("x1") && has(output$x1, ".646", "The equality is exact."))
+    answer("x2", x2_rec = "side", x2_longer = "second", x2_part = "rules")
+    check("Step 7: Box 7, with 0.97, 0.24, 32% and 90%",
+          done("x2") && has(output$x2, "0.97", "0.24", "32%", "90%", "same proportions of left and right",
+                            "closer boundaries both shorten", "The rules and the settings stay"))
+    check("Step 7: the decision times are drawn", is_png(output$p_ddm) && has(output$ddm_text, "nondecision time"))
+    answer("x3", x3_reason = "")
+    check("Step 7: the closing question needs a sentence", !done("x3") && has(output$x3_msg, "Write a sentence"))
+    answer("x3", x3_reason = "Nondecision time could differ.")
+    check("Step 7 is complete", done("x3") && has(output$x3, "Discussion"))
+
+    # Another design: the second case, 40 participants, pear trials 8-10
+    n_before <- length(entries())
     click("e_again")
-    check("Experiment restart: the Step 6 answers are cleared, and the notes remain",
-          !done("e6") && !done("x1") && !done("x2") && !done("x3") &&
-            grepl("Perception and movement", last_note()$answer, fixed = TRUE))
+    check("Trying another design clears Steps 5 to 7 and keeps the notes",
+          !done("e_design") && !done("f1") && !done("x1") && length(entries()) == n_before)
+    session$setInputs(e_design_set = "associability")
+    answer("e_design", e_design_n = "40", e_design_rec = "late", e_design_reason = "A final test.")
+    check("Step 5: pear trials 8-10 cannot show the first pear trial",
+          done("e_design") && { answer("e1", e1_e = "more"); answer("e2", e2_est = "no", e2_look = "first");
+                                has(output$e_contrast_text, "cannot show whether the difference was present") })
+    answer("e3", e3_pref = "best"); answer("e4", e4_which = "detect")
+    answer("f1", f1_which = "carry"); answer("f2", f2_first = "equal", f2_rank = "no")
+    check("Step 6: without the first pear trial the check cannot be made, and the process is revealed",
+          has(output$f_first, "cannot be made with the responses you kept") &&
+            isTRUE(output$f_revealed) && has(output$f_truth, "Carried associability."))
+    check("Step 6: the restricted comparison of other designs was run for the page",
+          has(output$f1_result, "were run with the study's code when this page was built"))
+
+    # Every output drawn after the seven steps, including outputs placed inside
+    # other outputs.
+    queue <- output_ids(page); drawn <- character(0); escaping <- character(0)
+    while (length(queue)) {
+      id <- queue[1]; queue <- queue[-1]
+      if (id %in% drawn) next
+      drawn <- c(drawn, id)
+      html <- tryCatch(paste(as.character(output[[id]]$html), collapse = "\n"),
+                       error = function(e) "")
+      if (grepl(escaped, html)) escaping <- c(escaping, id)
+      queue <- c(queue, output_ids(html))
+    }
+    check(paste0("No output shows a character entity with an escaped ampersand (",
+                 length(drawn), " outputs)",
+                 if (length(escaping)) paste0(": ", paste(escaping, collapse = ", "))),
+          length(drawn) > 50 && !length(escaping))
 
     # Starting again
-    n_notes <- length(entries())
+    n_before <- length(entries())
     click("restart")
-    check("Start again: everything is cleared and the notes are kept",
-          !done("q1") && !done("q2") && !done("q3c") && !done("e_design") && !done("x3") &&
-            has(output$cmp, "Which comparison would you run?") &&
-            length(entries()) == n_notes)
-    answer("q1", q1_left = "adaptive")
-    session$setInputs(cmp_choice_1 = "new", cmp_reason_1 = "Compare learning from equal values.")
-    click("cmp_go_1")
-    check("Start again: the new outcome can be chosen first",
-          has(output$cmp, "What do you expect each model to predict?"))
-    answer("q2", q2_rw = "zero", q2_ad = "pos", q2_why = "assoc")
-    answer("q3a", q3a_claim = "support")
-    answer("q3b", q3b_dir = "pos", q3b_when = "before")
-    session$setInputs(gv = 1)
-    answer("q3c", q3c_rev = "qualify")
-    check("Start again: the qualified conclusion gets the scope feedback",
-          has(output$q3c, "Recording the first response",
-              "lets you check for this distinction") && done("q3c"))
-    answer("q4a", q4a_rule = "threshold", q4a_time = "10", q4a_dir = "D", q4a_peak = "10")
-    check("Step 4, threshold at the last answer: the same answer for both; largest at the sixth",
-          has(output$q4a, "the same answer for both cues", "largest at the sixth"))
-    answer("q4b", q4b_more = "no")
-    check("Step 4, threshold at the last answer: more participants cannot help",
-          has(output$q4b, "same probability", "does not express"))
-    answer("e_design", e_design_set = "value", e_design_n = "160", e_design_rec = "full",
-           e_design_reason = "Keep the first response and the whole curve.")
-    check("Step 5 after a threshold demonstration: records still use the sigmoid experiment",
-          has(output$e_design_line, "Case 1") &&
-            grepl("sigmoid/Bernoulli observations", last_note()$settings, fixed = TRUE) &&
-            has(output$e_effect, num(design("value", "160", "full")$effect[["estimate"]])))
-    session$setInputs(e_design_set = "reset", e_design_n = "40", e_design_rec = "late")
-    check("Experiment: changing stale inputs cannot alter the submitted case and design",
-          answers$e_design$set == "value" && answers$e_design$n == "160" &&
-            has(output$e_design_line, "Case 1", "160 participants", "1–10"))
+    check("Starting again clears every step and keeps the notes",
+          !done("q1a") && !done("q2d") && !done("q3e") && !done("q4c") && !done("e_design") &&
+            !done("f5") && !done("x3") && length(entries()) == n_before)
+    check("Starting again offers the comparisons of Step 2 afresh",
+          has(output$cmp, 'value="cont"', 'value="pear"'))
 
-    # Step 5: the near-tie explanation and the axes of the contrast and score plots
-    near_tie <- data.frame(against = c("fixed", "reset"), difference = c(.001, 2), se = c(.001, 1))
-    check("Near-tie note: a near tie with the fixed-rate candidate does not trigger it",
-          !near_reset_scores(near_tie))
-    near_tie$difference <- c(2, .001); near_tie$se <- c(1, .001)
-    check("Near-tie note: a near tie with the reset candidate triggers it",
-          near_reset_scores(near_tie))
-    wide <- design("value", "160", "full")
-    wide$by_presentation$lower[1] <- -.6
-    wide$by_presentation$upper[1] <- .7
-    built <- ggplot_build(plot_contrast(cases$value[["160"]], wide))
-    yrange <- built$layout$panel_params[[1]]$y.range
-    check("Contrast plot: the axis holds the widened interval",
-          built$data[[2]]$ymin[1] == -.6 && built$data[[2]]$ymax[1] == .7 &&
-            yrange[1] <= -.6 && yrange[2] >= .7)
-    wide_scores <- data.frame(against = c("fixed", "reset"),
-                              difference = c(-260, 380), se = c(55, 90))
-    built <- ggplot_build(plot_scores(wide_scores))
-    xrange <- built$layout$panel_params[[1]]$x.range
-    check("Score plot: estimates and complete two-SE intervals fit on both sides of zero",
-          xrange[1] <= -370 && xrange[2] >= 560 &&
-            all(is.finite(built$data[[2]]$xmin)) && all(is.finite(built$data[[2]]$xmax)))
-    saved_scores <- unlist(lapply(cases, function(by_size) lapply(by_size, function(cas)
-      lapply(cas$designs, function(des) lapply(des$scores, function(scores) {
-        xrange <- ggplot_build(plot_scores(scores))$layout$panel_params[[1]]$x.range
-        xrange[1] <= min(0, scores$difference - 2 * scores$se) &&
-          xrange[2] >= max(0, scores$difference + 2 * scores$se)
-      })))), use.names = FALSE)
-    check("Score plot: every saved case, design and carryover policy shows its full intervals",
-          length(saved_scores) == 36L && all(saved_scores))
+    # Explore
+    check("Explore: the starting states at the default settings",
+          has(output$x_summary, num(trained$adaptive$alpha_B), "learning rate .12"))
+    session$setInputs(x_change = "supply")
+    check("Explore: Supply names its fixed learning rates",
+          has(output$x_change_explanation, num(trained$adaptive$rate_B), num(trained$adaptive$rate_D)) &&
+            is_png(output$x_gap) && has(output$x_table, "Fixed learning rate"))
+    session$setInputs(x_change = "none", x_c = "0.01")
+    check("Explore: C 1% more salient leaves D at .498", has(output$x_summary, ".498"))
+    session$setInputs(x_c = "0", x_rule = "threshold", x_theta = .5)
+    check("Explore: the response plot is drawn under the threshold rule", is_png(output$x_resp))
 
-    # Notes
-    check("Notes: mathematical inequalities survive HTML-to-text conversion",
-          plain_text("contrast < -2 SE; <i>g</i><sub>V</sub> > 0") == "contrast < -2 SE; g_V > 0")
-    notes <- entries()
-    check("Notes: every entry carries its settings",
-          all(vapply(notes, function(entry) !is.null(entry$settings), logical(1))))
-    txt <- readLines(output$notes_download, encoding = "UTF-8")
-    check("Notes: the download includes the settings and the designs",
-          any(grepl("Case 1, 160 participants, presentations 8–10 recorded", txt, fixed = TRUE)) &&
-            any(grepl("sigmoid, gamma = 8, theta = .5; presentation 1", txt, fixed = TRUE)) &&
-            any(grepl("alpha_init = .5, eta = .05", txt, fixed = TRUE)) &&
-            any(grepl("either score difference < -2 SE, otherwise unresolved", txt,
-                      fixed = TRUE)) &&
-            any(grepl("^  Result:     ", txt)))
+    # The notes
+    text <- notes_text(entries())
+    check("The notes name the paper and keep every step",
+          grepl("Thinking with Computational Models to Guide", text[1], fixed = TRUE) &&
+            all(vapply(paste("Step", 1:7), function(s) any(grepl(s, text, fixed = TRUE)), logical(1))))
+    check("The notes are plain text, without markup",
+          !any(grepl("<[a-z/]", text)) && !any(grepl("&[a-z]+;", text)))
+    check("Every note of Steps 1 to 4 records its settings",
+          all(vapply(Filter(function(e) e$step %in% paste("Step", 1:4), entries()),
+                     function(e) !is.null(e$settings), logical(1))))
+
+    # The score plot keeps a common scale for the saved cases.
+    p <- plot_scores(cases$associability[["160"]]$designs$full$scores$estimated)
+    x_range <- ggplot_build(p)$layout$panel_params[[1]]$x.range
+    check("The score plot spans at least -70 to 130", x_range[1] <= -70 && x_range[2] >= 130)
   })
 
   cat(sprintf("\nAll %d app flow checks passed.\n\n", n_checks))

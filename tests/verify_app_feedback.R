@@ -1,10 +1,8 @@
-# Checks of the feedback the companion app gives in Steps 1-5: every combination
-# of answers to the Step 1 question, the Step 2 prediction for O2, the Step 3
-# question on old-value carryover and the two Step 4 questions, and the readings
-# of Step 5 for every case, sample size and set of recorded presentations. A
-# correction must
-# appear for a wrong answer and only for a wrong answer. Stops at the first
-# failure.
+# Checks of the feedback the companion app gives: every combination of answers
+# to the questions of Steps 1 to 4 and 7, and to those of Steps 5 and 6 for
+# every saved case, sample size and set of analyzed pear trials. A correction
+# must appear for a wrong answer and only for a wrong answer, and no feedback
+# may show a character entity literally. Stops at the first failure.
 #   Rscript tests/verify_app_feedback.R
 
 local({
@@ -17,270 +15,266 @@ local({
     if (!isTRUE(ok)) stop(sprintf("FAIL  %s", label), call. = FALSE)
     n_checks <<- n_checks + 1L
   }
+  # A character entity such as &eta; in text not marked as HTML reaches the
+  # page with its ampersand escaped and is shown literally.
+  escaped <- "&amp;([a-zA-Z]+|#[0-9]+);"
+  escaping <- character(0)
   # The text as a reader sees it: runs of spaces and line breaks count as one space.
-  shown <- function(x) gsub("\\s+", " ", paste(as.character(x$html), collapse = " "))
-  contains <- function(s, p) grepl(p, s, fixed = TRUE)
-  # Presses an action button in a testServer session.
-  clicker <- function(session) function(id) {
-    now <- isolate(session$input[[id]])
-    do.call(session$setInputs, setNames(list(if (is.null(now)) 1 else now + 1), id))
+  shown <- function(x) {
+    s <- gsub("\\s+", " ", paste(as.character(x$html), collapse = " "))
+    if (grepl(escaped, s)) escaping <<- c(escaping, s)
+    s
   }
+  contains <- function(s, p) grepl(p, s, fixed = TRUE)
 
   cat("Checks of the app's feedback\n")
-
-  # Step 1 and Step 2
   testServer("shiny_app", {
-    click <- clicker(session)
-    leads <- c(nothing = "changes more than learned value", both = "comes from a smaller error")
-    for (q1 in c("nothing", "both", "adaptive")) {
-      training$reset()
-      session$setInputs(q1_left = q1)
-      click("q1_go")
-      s <- shown(output$q1)
-      check(paste("Step 1,", q1, "answer: the feedback addresses this answer only"),
-            all(vapply(names(leads), function(k) contains(s, leads[[k]]) == (k == q1), logical(1))) &&
-              contains(s, "only the adaptive model leaves it less ready"))
+    app <- parent.env(session$env)
+    cases <- get("cases", envir = app)
+    clear_answers <- get("clear_answers", envir = app)
+    click <- function(id) {
+      now <- isolate(input[[id]])
+      do.call(session$setInputs, setNames(list(if (is.null(now)) 1 else now + 1), id))
     }
-
-    # The new-outcome comparison records a note without a yes/no verdict.
-    comparison$reset()
-    n_before <- length(entries())
-    session$setInputs(cmp_choice_1 = "new", cmp_reason_1 = " ")
-    click("cmp_go_1")
-    check("Step 2: a comparison needs a reason before it is recorded",
-          contains(shown(output$cmp_msg), "Add a sentence") && length(entries()) == n_before)
-    session$setInputs(cmp_reason_1 = "Hold starting values equal and compare learning.")
-    click("cmp_go_1")
-    check("Step 2: the new-outcome comparison opens",
-          contains(shown(output$cmp), "What do you expect each model to predict?"))
-    e <- entries()
-    check("Step 2: the comparison adds one note, with the state at the end of training",
-          length(e) == n_before + 1L && e[[length(e)]]$topic == "Comparison chosen" &&
-            contains(e[[length(e)]]$result, "Multipliers at the end of compound training"))
-    click("cmp_go_1")
-    check("Step 2: a repeated click does not add a second note", length(entries()) == n_before + 1L)
-
-    why_text <- c(start = "You attributed the adaptive gap to different starting values",
-                  error = "You attributed the adaptive gap to different first-trial errors",
-                  assoc = "Their associabilities differ",
-                  A = "A is absent during O2 training")
-    for (rw in c("zero", "pos", "neg")) for (ad in c("zero", "pos", "neg")) {
-      for (why in names(why_text)) {
-        comparison$reset()
-        session$setInputs(q2_rw = rw, q2_ad = ad, q2_why = why)
-        click("q2_go")
-        s <- shown(output$q2)
-        label <- paste("Step 2,", rw, ad, why)
-        check(paste(label, "answers: both models' predictions"),
-              contains(s, "gap is zero after every update") && contains(s, "D learns faster at first"))
-        if (rw != "zero") {
-          check(paste(label, "answers: the Rescorla-Wagner direction is corrected"),
-                contains(s, paste("You expected", if (rw == "pos") "D" else "B",
-                                  "to pull ahead under Rescorla")))
-        }
-        if (ad != "pos") {
-          check(paste(label, "answers: the adaptive direction is corrected"),
-                contains(s, if (ad == "zero") "Equal starting values do not reset" else
-                  "B starts with lower associability"))
-        }
-        check(paste(label, "answers: a correction only for a wrong prediction"),
-              contains(s, "You expected") == (rw != "zero" || ad != "pos"))
-        check(paste(label, "answers: a correction of the reason only for a wrong reason"),
-              contains(s, "You attributed") == (why != "assoc") &&
-                contains(s, "initial advantage comes from associability") == (why != "assoc"))
-        check(paste(label, "answers: the reason is answered and saved in the notes"),
-              contains(s, why_text[[why]]) &&
-                contains(entries()[[length(entries())]]$result, why_text[[why]]))
+    answer <- function(id, a) {
+      clear_answers(answers, id)
+      do.call(session$setInputs, setNames(a, paste0(id, "_", names(a))))
+      click(paste0(id, "_go"))
+    }
+    # Answers question id with every row of grid and checks that each phrase
+    # appears exactly when expect() names it. "out" is the output that shows
+    # the feedback, and "before" runs ahead of each answer.
+    combinations <- function(id, grid, expect, phrases, out = id, before = function(a) NULL,
+                             label = id) {
+      for (i in seq_len(nrow(grid))) {
+        a <- lapply(as.list(grid[i, , drop = FALSE]), as.character)
+        before(a)
+        answer(id, a)
+        s <- shown(output[[out]])
+        want <- expect(a)
+        ok <- all(vapply(names(phrases), function(k) contains(s, phrases[[k]]) == (k %in% want),
+                         logical(1)))
+        check(paste0(label, ", ", paste(unlist(a), collapse = "/"),
+                     ": the feedback addresses this answer only"), ok)
       }
     }
+    grid <- function(...) expand.grid(..., stringsAsFactors = FALSE)
+    session$setInputs(t1_trial = 12, t_model = "adaptive", t_k = 1, ga = .5, gv = .5,
+                      n3_compound = 10, n3_eta = .05, r3_rule = "proportional", r3_c = "0")
+
+    # Step 1. The result of Box 1 is shown once the code has been checked.
+    answer("q1b", list(test = "thirty"))
+    combinations("q1a", grid(dir = c("more", "less", "same"),
+                             why = c("error", "finished", "rate", "left")),
+      expect = function(a) c(
+        if (a$dir == "less" && a$why == "error") "both",
+        if (a$dir == "less" && a$why != "error") c("right_dir", a$why),
+        if (a$dir != "less" && a$why == "error") "right_reason",
+        if (a$dir != "less" && a$why != "error") c(paste0("not_", a$dir), a$why)),
+      phrases = c(both = "Your direction and your reason both match.",
+                  right_dir = "The direction is right, but the reason is not.",
+                  right_reason = "Your reason is the right one",
+                  not_more = "The light gains less, not more.",
+                  not_same = "The light gains less, not the same.",
+                  finished = "The tone has not finished learning.",
+                  rate = "the learning rate stays at .12",
+                  left = "it does not learn from its own error"),
+      out = "q1a_result")
+    combinations("q1b", grid(test = c("single", "zero", "thirty")),
+      expect = function(a) if (a$test != "thirty") a$test,
+      phrases = c(single = "That test checks the tone's training",
+                  zero = "That test catches a program that updates the tone first"))
+    combinations("q1c", grid(show = c("tone", "two", "any")),
+      expect = function(a) if (a$show != "two") a$show,
+      phrases = c(tone = "cannot single out the trained tone", any = "so it cannot show that either"))
+
+    # Step 2
+    combinations("q2a", grid(first = c("less", "same", "more")),
+      expect = function(a) if (a$first != "same") a$first,
+      phrases = c(less = "That is what Rescorla", more = "start the compound trials in the same state"))
+    combinations("q2b", grid(left = c("nothing", "adaptive", "both")),
+      expect = function(a) if (a$left != "adaptive") a$left,
+      phrases = c(nothing = "changes more than learned value",
+                  both = "come from a smaller shared error"))
+    tells <- c(more = "B staying below D shows that blocking persists",
+               cont = "The same extra training does not give B and D the same starting conditions",
+               across = "This comparison changes more than associability")
+    for (ch in names(tells)) for (verdict in c("yes", "no")) {
+      explanations$reset()
+      session$setInputs(cmp_choice_1 = ch, cmp_reason_1 = "A reason.")
+      click("cmp_go_1")
+      do.call(session$setInputs, setNames(list(verdict), paste0("cmp_tells_", ch)))
+      click(paste0("cmp_check_", ch))
+      s <- shown(output$cmp)
+      check(paste0("Step 2 comparison ", ch, ", ", verdict, ": the feedback addresses this answer only"),
+            all(vapply(names(tells), function(k) contains(s, tells[[k]]) == (k == ch && verdict == "yes"),
+                       logical(1))))
+    }
+    combinations("q2c", grid(rw = c("equal", "less", "more"), ad = c("equal", "less", "more"),
+                             why = c("start", "rate", "A", "error")),
+      expect = function(a) c(if (a$rw != "equal") paste0("rw_", a$rw),
+                             if (a$ad != "less") paste0("ad_", a$ad),
+                             if (a$why != "rate") paste0("why_", a$why)),
+      phrases = c(rw_less = "You expected B to gain less under Rescorla",
+                  rw_more = "You expected B to gain more under Rescorla",
+                  ad_equal = "You expected equal gains under the adaptive model",
+                  ad_more = "You expected B to gain more under the adaptive model",
+                  why_start = "so their starting values are equal",
+                  why_A = "A is absent during the pear trials",
+                  why_error = "so their first errors are equal"))
+    combinations("q2d", grid(n = c("stop", "converge", "error", "overtake")),
+      expect = function(a) if (a$n != "error") a$n,
+      phrases = c(stop = "D keeps learning on every pear trial",
+                  converge = "B's associability does rise during the pear trials",
+                  overtake = "B never overtakes D"))
+
+    # Step 3
+    combinations("q3a", grid(pr = c("gone", "smaller", "same"),
+                             supply = c("same", "close", "smaller")),
+      expect = function(a) c(if (a$pr != "gone") "pr", if (a$supply != "close") paste0("supply_", a$supply)),
+      phrases = c(pr = "with no difference left for the gap to come from",
+                  supply_same = "The two runs agree only at first.",
+                  supply_smaller = "so its first gaps are the same"))
+    combinations("q3c", grid(ahead = c("D", "B", "neither"), gains = c("B", "D", "equal"),
+                             after = c("D", "B", "equal")),
+      expect = function(a) c(if (a$ahead != "D") "ahead", if (a$gains != "B") "gains",
+                             if (a$after != "D") "after"),
+      phrases = c(ahead = "keeps their order", gains = "B gains more, because it starts lower.",
+                  after = "D still has the higher value"))
+    # A first conclusion that a positive gap supports the adaptive model is
+    # answered whether the reader keeps or changes it.
+    q3d_phrases <- c(support = "no longer favors the adaptive model",
+                     depends = "already allowed for this",
+                     none = "We can still ask when the gap first appears.",
+                     qualify = "Recording the first response lets you check whether",
+                     useless = "You can still use the timing of the gap.")
+    combinations("q3d", grid(claim = c("support", "depends", "none"),
+                             rev = c("keep", "qualify", "useless")),
+      expect = function(a) c(if (a$claim == "support") "support",
+                             if (a$rev == "keep" && a$claim != "support") a$claim,
+                             if (a$rev != "keep") a$rev),
+      phrases = q3d_phrases,
+      before = function(a) answer("q3b", list(claim = a$claim)))
+    combinations("q3e", grid(prop = c("same", "smaller", "larger"), rank = c("same", "smaller", "larger")),
+      expect = function(a) c(if (a$prop != "same") "prop", if (a$rank != "smaller") "rank"),
+      phrases = c(prop = "follows the size of the difference between the errors",
+                  rank = "changes associability by the full step"))
+
+    # Step 4
+    combinations("q4a", grid(likely = c("depends", "value", "same"), must = c("yes", "only", "never")),
+      expect = function(a) c(if (a$likely != "depends") paste0("likely_", a$likely),
+                             if (a$must != "only") paste0("must_", a$must)),
+      phrases = c(likely_value = "A learned value is not a probability of a yes",
+                  likely_same = "The lights started equal",
+                  must_yes = "Only a deterministic rule, such as a threshold at .5, makes these",
+                  must_never = "A threshold rule does make them certain."))
+    combinations("q4b", grid(rule = c("sigmoid", "threshold"), peak = c("1", "6", "10", "same")),
+      expect = function(a) if (a$peak != "6") paste0(a$peak, if (a$peak == "10") paste0("_", a$rule)),
+      phrases = c(`1` = "It does not give either light a value for the pear before the first pear trial.",
+                  `10_sigmoid` = "D's yes probability is near the top of the sigmoid",
+                  `10_threshold` = "the threshold rule gives a yes to both lights",
+                  same = "so the difference changes too"))
+    combinations("q4c", grid(sig = c("yes", "no"), thr = c("yes", "no")),
+      expect = function(a) c(if (a$sig == "no") "sig", if (a$thr == "yes") "thr"),
+      phrases = c(sig = "so more responses estimate that difference more precisely",
+                  thr = "add only more yes responses"))
+
+    # Steps 5 and 6, for every saved case, sample size and set of analyzed pear trials
+    for (set in c("value", "associability", "reset")) for (n in c("40", "160"))
+    for (rec in c("late", "early", "full")) {
+      des <- cases[[set]][[n]]$designs[[rec]]
+      detected <- des$effect[["detected"]] == 1
+      label <- paste(set, n, rec)
+      experiment$reset(); shared$reset()
+      session$setInputs(e_design_set = set)
+      answer("e_design", list(n = n, rec = rec, reason = "A reason."))
+      check(paste(label, ": the design is run"), isTRUE(output$done_e_design))
+
+      combinations("e1", grid(e = c("more", "none", "assoc", "value")),
+        expect = function(a) {
+          if (a$e %in% c("assoc", "value")) "explain"
+          else if (a$e == "more" && !detected) "not_detected"
+          else if (a$e == "none" && detected) "detected"
+          else "right"
+        },
+        phrases = c(explain = "explanations to compare",
+                    not_detected = "A positive difference needs the whole interval",
+                    detected = "The whole interval lies above zero",
+                    right = "Your reading matches the interval."), label = paste(label, "e1"))
+      combinations("e2", grid(est = c("yes", "no"), look = c("first", "last", "overall")),
+        expect = function(a) c(if (a$est == "yes") "est", if (a$look != "first") a$look),
+        phrases = c(est = "does not show where it came from", last = "By the last pear trials",
+                    overall = "mixes all the pear trials"), label = paste(label, "e2"))
+      combinations("e3", grid(pref = c("process", "best")),
+        expect = function(a) if (a$pref == "process") "process",
+        phrases = c(process = "may be missing from the candidates"), label = paste(label, "e3"))
+      combinations("e4", grid(which = c("detect", "identify", "same")),
+        expect = function(a) if (a$which != "detect") "wrong",
+        phrases = c(wrong = "Detecting a difference was the easier task"), label = paste(label, "e4"))
+
+      combinations("f1", grid(which = c("carry", "all", "none")),
+        expect = function(a) if (a$which != "carry") a$which,
+        phrases = c(all = "no way to make B and D differ systematically",
+                    none = "can still explain a difference."), label = paste(label, "f1"))
+      combinations("f2", grid(first = c("equal", "carry", "depends"), rank = c("no", "yes")),
+        expect = function(a) c(if (a$first != "equal") a$first, if (a$rank == "yes") "rank"),
+        phrases = c(carry = "predicts equal first responses too",
+                    depends = "Every choice of parameters keeps this equality",
+                    rank = "cannot favor any one of them"), label = paste(label, "f2"))
+      check(paste(label, ": the process is revealed exactly when the first pear trial is missing, before the check"),
+            isTRUE(output$f_revealed) == is.null(des$first))
+      if (!is.null(des$first)) {
+        rejects <- des$first$p < .05
+        combinations("f3", grid(h = c("disagree", "consistent", "value")),
+          expect = function(a) c(
+            if (a$h == "consistent" && rejects) "missed",
+            if (a$h == "disagree" && !rejects) "claimed",
+            if (a$h == "value") "value",
+            if (rejects) "rejects" else "no_rejection"),
+          phrases = c(missed = "You chose no clear evidence",
+                      claimed = "You chose a disagreement",
+                      value = "The check cannot show that learned values carried over",
+                      rejects = "the one-sided test rejects equal first-response probabilities",
+                      no_rejection = "finds no clear evidence of more yes responses to D"),
+          label = paste(label, "f3"))
+        check(paste(label, ": the process is revealed after the check"), isTRUE(output$f_revealed))
+      }
+      combinations("f4", grid(explain = c("learning", "responding", "unfit")),
+        expect = function(a) if (a$explain != "learning") a$explain,
+        phrases = c(responding = "attribute the difference to responding only if",
+                    unfit = "They fit the responses"), label = paste(label, "f4"))
+
+      # The statements: the app's judgment of each follows from the case.
+      clear_answers(answers, "f5")
+      session$setInputs(f5_pick = c("1", "2", "3", "4", "5"))
+      click("f5_go")
+      s <- shown(output$f5)
+      supported <- c(detected, des$decision$estimated != "unresolved", FALSE, FALSE,
+                     !is.null(des$first) && des$first$p < .05)
+      judgments <- regmatches(s, gregexpr("Your results (do not )?support it", s))[[1]]
+      check(paste(label, ": each statement is judged from this case's results"),
+            length(judgments) == 5 && identical(!grepl("do not", judgments), supported))
+    }
+
+    # Step 7
+    combinations("x1", grid(more = c("yes", "no")),
+      expect = function(a) if (a$more == "yes") "more",
+      phrases = c(more = "Here both settings predict the same accuracy."))
+    combinations("x2", grid(rec = c("rt", "conf", "side", "none"), longer = c("first", "second", "same"),
+                            part = c("bridge", "rules", "settings")),
+      expect = function(a) c(if (a$rec != "rt") a$rec, if (a$longer != "first") a$longer,
+                             if (a$part != "bridge") "part"),
+      phrases = c(conf = "Confidence would need an additional rule",
+                  side = "same proportions of left and right responses",
+                  none = "With correctness alone the settings cannot be told apart",
+                  second = "Faster drift and closer boundaries both shorten",
+                  same = "Equal accuracy does not require equal decision times",
+                  part = "The rules and the settings stay as they were."))
   })
+  check(paste0("No feedback shows a character entity with an escaped ampersand",
+               if (length(escaping)) paste0(": ...", regmatches(escaping[1],
+                 regexpr(paste0(".{0,80}", escaped), escaping[1])))),
+        !length(escaping))
 
-  # Step 4 and the old-value question of Step 3
-  testServer("shiny_app", {
-    session$setInputs(
-      gv = .5, ga = .5, t_model = "adaptive", t_k = 1,
-      q4_try_rule = "sigmoid", q4_try_time = "1", x_n2 = 10, x_eta = .05,
-      x_gv = 0, x_ga = 1, x_change = "none", x_e = "0", x_rule = "sigmoid",
-      x_gamma = 8, x_theta = .5)
-    click <- clicker(session)
-    timing <- c(`1` = "You expected the largest difference at the first answer.",
-                `10` = "You expected the largest difference at the last answer.",
-                same = "You expected the same response difference at all three presentations.")
-    for (rule in c("sigmoid", "threshold")) for (time in c("1", "6", "10")) {
-      # Which cue has the higher probability of a yes at this presentation; under
-      # both rules the difference is largest at the sixth.
-      truth <- if (time == "1" || (rule == "threshold" && time == "10")) "same" else "D"
-      for (dir in c("B", "same", "D")) for (peak in c("1", "6", "10", "same")) {
-        responses$reset()
-        session$setInputs(q4a_rule = rule, q4a_time = time, q4a_dir = dir, q4a_peak = peak)
-        click("q4a_go")
-        text <- shown(output$q4a)
-        label <- paste("Step 4,", rule, "rule, presentation", time, "answers", dir, peak)
-        if (dir != truth) {
-          check(paste0(label, ": the direction is corrected"),
-                contains(text, if (dir == "same") "You expected equal yes probabilities." else
-                  paste0("You expected a higher probability of a yes for ", dir, ".")))
-        }
-        if (peak != "6") check(paste0(label, ": the timing is corrected"), contains(text, timing[[peak]]))
-        check(paste0(label, ": the difference is largest at the sixth"),
-              contains(text, "largest at the sixth"))
-        check(paste0(label, ": a correction only for a wrong prediction"),
-              contains(text, "You expected") == (dir != truth || peak != "6"))
-      }
-      for (more in c("yes", "no")) {
-        answers$q4b <- NULL
-        answers$q4b_msg <- NULL
-        session$setInputs(q4b_more = more)
-        click("q4b_go")
-        text <- shown(output$q4b)
-        label <- paste("Step 4,", rule, "rule, presentation", time, "more participants:", more)
-        check(paste0(label, ": the feedback says what the responses at this presentation show"),
-              contains(text, if (time == "1") "same learned value" else
-                if (truth == "same") "same probability of a yes" else
-                  if (rule == "threshold") "every participant answers" else
-                    "The two probabilities differ by"))
-        if (truth == "same" && more == "yes") {
-          check(paste0(label, ": more participants cannot create a difference"),
-                contains(text, "It cannot change the fact that this rule gives both cues the same response probability"))
-        }
-        if (truth != "same" && more == "no") {
-          check(paste0(label, ": the rule keeps a response difference"),
-                contains(text, "does preserve a response difference"))
-        }
-        check(paste0(label, ": a correction only for a wrong answer"),
-              contains(text, "It cannot change the fact that this rule gives both cues the same response probability") ==
-                (truth == "same" && more == "yes") &&
-                contains(text, "does preserve a response difference") ==
-                (truth != "same" && more == "no"))
-      }
-    }
-    for (dir in c("zero", "pos", "neg")) for (when in c("before", "after", "none")) {
-      assumptions$reset()
-      session$setInputs(q3b_dir = dir, q3b_when = when)
-      click("q3b_go")
-      text <- shown(output$q3b)
-      label <- paste("Step 3, old-value carryover,", dir, when, "answers")
-      check(paste0(label, ": the gap is there before any O2 feedback"),
-            contains(text, "The gap is there before any O2 feedback"))
-      if (dir == "zero") check(paste0(label, ": unequal O1 values carry over"), contains(text, "two unequal O1 values"))
-      if (dir == "neg") check(paste0(label, ": carryover keeps the order"), contains(text, "preserves that order"))
-      if (when != "before") {
-        check(paste0(label, ": carryover sets the values before learning"),
-              contains(text, "Carryover sets the values before learning"))
-      }
-      check(paste0(label, ": a correction only for a wrong prediction"),
-            contains(text, "two unequal O1 values") == (dir == "zero") &&
-              contains(text, "preserves that order") == (dir == "neg") &&
-              contains(text, "Carryover sets the values before learning") == (when != "before"))
-    }
-  })
-
-  # Step 5, for every case, sample size and recording window
-  app_data <- readRDS("shiny_app/data/inference_cases.rds")
-  statement_text <- c(
-    "The estimated D-minus-B response contrast is positive, with a 95% interval above zero.",
-    "The comparison gave a preference for or against associability carryover under the stated rule.",
-    "The model comparison showed which process generated the records.",
-    "The first-answer check tested a prediction that all three candidates share.",
-    "The proportion of experiments reaching a model preference varied across the six designs.")
-  testServer("shiny_app", {
-    click <- clicker(session)
-    for (process in c("value", "associability", "reset")) for (n in c("40", "160")) {
-      for (view in c("early", "full", "late")) {
-        experiment$reset()
-        session$setInputs(e_design_set = process, e_design_n = n, e_design_rec = view,
-                          e_design_reason = "Keep the responses needed for this comparison.")
-        click("e_design_go")
-        design <- app_data$cases[[process]][[n]]$designs[[view]]
-        detected <- design$effect[["detected"]] == 1
-        label <- paste("Step 5,", process, n, view)
-        for (choice in c("more", "none", "assoc", "value")) {
-          answers$e1 <- NULL
-          session$setInputs(e1_e = choice)
-          click("e1_go")
-          text <- shown(output$e1)
-          if (choice %in% c("assoc", "value")) {
-            check(paste0(label, " ", choice, ": a response contrast does not identify the process"),
-                  contains(text, "does not say which process"))
-          } else if (choice == "more" && !detected) {
-            check(paste0(label, " ", choice, ": a positive contrast needs the whole interval above zero"),
-                  contains(text, "whole interval to lie above zero"))
-          } else if (choice == "none" && detected) {
-            check(paste0(label, " ", choice, ": an interval above zero shows a positive contrast"),
-                  contains(text, "whole interval lies above zero"))
-          } else {
-            check(paste0(label, " ", choice, ": a correct reading leads to the candidates"),
-                  contains(text, "What could have produced"))
-          }
-          check(paste0(label, " ", choice, ": a correction only for a wrong reading"),
-                contains(text, "You selected") ==
-                  ((choice == "more" && !detected) || (choice == "none" && detected)))
-        }
-        # The comparison under each choice of g_V. The near-tie note appears only
-        # when the carryover and reset candidates' held-out scores differ by less
-        # than .01 with a standard error below .01.
-        for (policy in c("zero", "estimated")) {
-          answers$e2 <- NULL
-          session$setInputs(e2_policy = policy, e2_reason = "")
-          click("e2_go")
-          text <- shown(output$e2_result)
-          r <- design$scores[[policy]][design$scores[[policy]]$against == "reset", ]
-          tie <- abs(r$difference) < .01 && r$se < .01
-          check(paste0(label, " ", policy, ": the near-tie note appears only for a near tie"),
-                contains(text, "nearly identical held-out scores") == tie)
-        }
-        for (choice in c("yes", "not")) {
-          answers$e3 <- NULL
-          session$setInputs(e3_which = choice)
-          click("e3_go")
-          check(paste0(label, " ", choice, ": a correction only for reading the ranking as the process"),
-                contains(shown(output$e3), "sharing an incorrect assumption") == (choice == "yes"))
-        }
-        for (choice in c("equal", "carry", "depends")) {
-          answers$e4 <- NULL
-          session$setInputs(e4_f = choice)
-          click("e4_go")
-          text <- shown(output$e4)
-          check(paste0(label, " ", choice, ": a correction only for a wrong answer about the first answers"),
-                contains(text, "predicts equal first-answer probabilities too") == (choice == "carry") &&
-                  contains(text, "response function is shared") == (choice == "depends") &&
-                  contains(text, "their ranking cannot test it"))
-        }
-        if (!is.null(design$first)) {
-          rejects <- design$first$p < .05
-          for (choice in c("consistent", "disagree", "value")) {
-            answers$e5 <- NULL
-            session$setInputs(e5_h = choice)
-            click("e5_go")
-            text <- shown(output$e5)
-            if (choice == "consistent" && rejects) {
-              check(paste0(label, " ", choice, ": a rejected prediction is corrected"),
-                    contains(text, "but this test rejects it"))
-            } else if (choice == "disagree" && !rejects) {
-              check(paste0(label, " ", choice, ": failing to reject is not a disagreement"),
-                    contains(text, "did not find clear evidence"))
-            } else if (choice == "value") {
-              check(paste0(label, " ", choice, ": the check does not identify old-value carryover"),
-                    contains(text, "cannot show that old values carried over"))
-            }
-            check(paste0(label, " ", choice, ": a correction only for a wrong reading"),
-                  contains(text, "You chose") ==
-                    ((choice == "consistent" && rejects) || (choice == "disagree" && !rejects)))
-          }
-        }
-        # The conclusions, judged with g_V estimated, the last choice above.
-        session$setInputs(e6_pick = "5")
-        click("e6_go")
-        result <- entries()[[length(entries())]]$result
-        supported <- c(detected, design$decision$estimated != "unresolved", FALSE,
-                       !is.null(design$first), TRUE)
-        for (i in 1:5) {
-          check(paste0(label, ": statement ", i, if (supported[i]) " is supported" else " is not supported"),
-                contains(result, paste0(i, ". ", statement_text[i],
-                                        if (supported[i]) " Supported." else " Not supported.")))
-        }
-      }
-    }
-  })
-  cat(sprintf("All %d feedback checks passed.\n", n_checks))
+  cat(sprintf("All %d feedback checks passed.\n\n", n_checks))
 })

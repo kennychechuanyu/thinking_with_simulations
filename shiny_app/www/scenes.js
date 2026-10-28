@@ -1,8 +1,8 @@
 // Moving between the steps of the inquiry, sections that start closed on
 // narrow screens, and saving the notes.
 document.addEventListener('DOMContentLoaded', function () {
-  // The flags that complete Steps 1 to 5, which app.R sends as scene_done.
-  var milestones = ['done_q1', 'done_q2', 'done_q3c', 'done_q4b', 'done_e6'];
+  // The flags that complete Steps 1 to 7, which app.R sends as scene_done.
+  var milestones = ['done_q1c', 'done_q2d', 'done_q3e', 'done_q4c', 'done_e4', 'done_f5', 'done_x3'];
   var completed = {};
   var currentStep = 1;
   var stepButtons = document.querySelectorAll('[data-step-target]');
@@ -23,7 +23,9 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   function goToStep(next, attempts) {
     if (!next) return;
-    var target = next.tagName === 'DETAILS' ? next : next.querySelector('h2') || next;
+    // A step takes the focus at its summary. Safari leaves everything inside a
+    // details element out of the Tab order once the element has a tabindex.
+    var target = next.tagName === 'DETAILS' ? next.querySelector('summary') : next.querySelector('h2') || next;
     // The completion message can arrive just before Shiny reveals the next panel.
     if (!target.getClientRects().length) {
       if ((attempts || 0) < 20) setTimeout(function () { goToStep(next, (attempts || 0) + 1); }, 50);
@@ -35,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (next.tagName === 'DETAILS') next.open = true;
     currentStep = Number(next.id.replace('scene-', ''));
     updateProgress();
-    target.setAttribute('tabindex', '-1');
+    if (target.tagName !== 'SUMMARY') target.setAttribute('tabindex', '-1');
     target.focus({ preventScroll: true });
     target.scrollIntoView({ block: 'start' });
     window.dispatchEvent(new Event('resize'));

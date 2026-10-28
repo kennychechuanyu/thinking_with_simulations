@@ -1,0 +1,12 @@
+study: main
+experiments: 3600
+repetitions: 400
+starts per fit: 48
+workers: 8
+R: R version 4.5.2 (2025-10-31)
+platform: aarch64-apple-darwin20
+Rcpp: 1.1.1
+md5 R/models.R: b3b3ec60d828c8c2196ee5cb9f9a1aca
+md5 R/inference.R: b5cddd5784f6da9ae0ac03c3b5d53673
+md5 R/inference.cpp: 9a1a81fd74324e8bef57e279473b4f36
+md5 analysis/section6_study.R: 19c03bbc14a14f0d8b3bc32fd2120ffc

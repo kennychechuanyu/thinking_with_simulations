@@ -23,7 +23,14 @@ plain_text <- function(x) {
   x <- gsub("&eta;", "eta", x, fixed = TRUE)
   x <- gsub("&gamma;", "gamma", x, fixed = TRUE)
   x <- gsub("&theta;", "theta", x, fixed = TRUE)
+  x <- gsub("&lambda;", "lambda", x, fixed = TRUE)
   x <- gsub("&ndash;", "–", x, fixed = TRUE)
+  x <- gsub("&times;", "×", x, fixed = TRUE)
+  x <- gsub("&rarr;", "→", x, fixed = TRUE)
+  x <- gsub("&asymp;", "≈", x, fixed = TRUE)
+  x <- gsub("&mdash;", "—", x, fixed = TRUE)
+  x <- gsub("&lt;", "<", x, fixed = TRUE)
+  x <- gsub("&gt;", ">", x, fixed = TRUE)
   x <- gsub("&minus;", "−", x, fixed = TRUE)
   x <- gsub("&plusmn;", "±", x, fixed = TRUE)
   x <- gsub("&nbsp;", " ", x, fixed = TRUE)
@@ -134,9 +141,9 @@ notes_ui <- function(entries) {
 }
 
 notes_text <- function(entries) {
-  if (!length(entries)) return("No answers recorded.")
-  lines <- c("Notes from the companion app to 'Thinking with Models through Simulation",
-             "to Guide Scientific Inquiry'", format(Sys.time(), "%Y-%m-%d %H:%M %Z"), "")
+  if (!length(entries)) return("The notes are empty.")
+  lines <- c("Notes from the companion app to 'Thinking with Computational Models to Guide",
+             "Scientific Inquiry'", format(Sys.time(), "%Y-%m-%d %H:%M %Z"), "")
   for (e in entries) {
     lines <- c(lines, paste0(e$step, ", ", e$topic, " (", e$time, ")"),
                paste0("  Question:   ", e$question),

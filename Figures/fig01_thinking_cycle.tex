@@ -47,7 +47,7 @@
 \node[choice]   (impl)   at (-2.46,4.40) {\main{Code}\\[3pt]\sub{implementation}};
 \node[choice]   (set)    at (0,4.40)     {\main{Settings}\\[3pt]\sub{\begin{tabular}{@{}c@{}}trial sequence,\\starting values,\\parameter values\end{tabular}}};
 \node[chainbox] (states) at (2.46,4.40)  {\main{Model\\states}};
-\node[choice]   (bridge) at (4.92,4.40)  {\main{Observation\\bridge}\\[3pt]\sub{states to data}};
+\node[choice]   (bridge) at (4.92,4.40)  {\main{Observation\\bridge}\\[3pt]\sub{\begin{tabular}{@{}c@{}}states to\\responses\end{tabular}}};
 \node[chainbox] (pred)   at (7.38,4.40)  {\main{Predicted\\responses}};
 \foreach \a/\b in {theory/spec,spec/impl,impl/set,set/states,states/bridge,bridge/pred}
   \draw[chainarrow] (\a.east) -- (\b.west);
@@ -70,12 +70,12 @@
 \node[workflow] (q) at (-6.95,0.10) {\step{Question}{What do we\\want to know?}};
 \node[workflow] (f) at (-4.17,0.10) {\step{Formalize}{Write down the\\choices in (a)}};
 \node[workflow] (a) at (-1.39,0.10) {\step{Anticipate}{Record what we\\expect, and why}};
-\node[workflow] (s) at (1.39,0.10)  {\step{Simulate}{Run the model\\as specified}};
+\node[workflow] (s) at (1.39,0.10)  {\step{Calculate}{By derivation or\\by simulation}};
 \node[workflow] (x) at (4.17,0.10)  {\step{Compare}{Results against\\the expectation}};
-\node[workflow] (r) at (6.95,0.10)  {\step{Reflect}{Trace the result\\back through (a)}};
+\node[workflow] (r) at (6.95,0.10)  {\step{Reflect}{What is settled,\\and what is open?}};
 \foreach \a/\b in {q/f,f/a,a/s,s/x,x/r} \draw[workflowarrow] (\a.east) -- (\b.west);
 \draw[workflowarrow, rounded corners=5pt] (r.south) -- ++(0,-0.50)
-  -- node[midway, fill=white, inner xsep=3pt, inner ysep=1.5pt, font=\fontsize{7.0}{8.2}\selectfont, text=muted] {revise a choice in (a) and try again}
+  -- node[midway, fill=white, inner xsep=3pt, inner ysep=1.5pt, font=\fontsize{7.0}{8.2}\selectfont, text=muted] {choose the next comparison}
   ($(q.south)+(0,-0.50)$) -- (q.south);
 \end{tikzpicture}
 \end{document}
