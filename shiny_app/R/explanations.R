@@ -40,8 +40,9 @@ explanations_ui <- function() {
        and C then share the error, and each gains .12 of it, so together they remove 24% of it
        on each compound trial. After ten compound trials, each has half of 1 &minus;
        .76<sup>10</sup>, about ", num(trained$rw$V_D), ". This is less than the .7215 a cue
-       reaches alone, because D shares the error with C from the start. This reduction is
-       called overshadowing. B ends at about ", num(trained$rw$V_B), ", well below D. Both
+       reaches alone, because D shares the error with C from the start. In behavior, weaker
+       responding to a cue trained with a companion than to a cue trained alone is called
+       overshadowing. B ends at about ", num(trained$rw$V_B), ", well below D. Both
        lights had companions, but the one that appeared with the trained tone acquired less
        value. This is the pattern that defines blocking, here in learned values rather than in
        responses."),

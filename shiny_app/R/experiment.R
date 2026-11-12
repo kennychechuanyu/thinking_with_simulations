@@ -125,8 +125,9 @@ experiment_ui <- function() scene("scene-5", "5", "What an experiment could esta
             vrow("Cross-validation", "Fitting a candidate to some participants and scoring its
                  predictions for the others."),
             vrow("Decision margin", "Twice the standard error of the difference between two
-                 candidates' held-out log scores. A candidate is favored only if its advantage is
-                 larger than this margin.")))),
+                 candidates' held-out log scores. The decision rule uses this margin to favor
+                 associability carryover, to favor a candidate without associability carryover,
+                 or to leave the comparison unresolved.")))),
       div(class = "question", uiOutput("e3"))),
     conditionalPanel("output.done_e3",
       fig("e_scores", "170px"),

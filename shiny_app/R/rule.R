@@ -187,8 +187,8 @@ rule_server <- function(input, output, answers, add_note) {
       p("These starting values were chosen for the check. They are not the result of the earlier
          training. Calculating a separate error for each cue is a legitimate modeling choice,
          and the second model, in Step 2, makes it. In a program for Rescorla–Wagner, however,
-         it would be a mistake. Whether the model gives an adequate account of actual learning
-         is a different question, usually called validation.")),
+         it would be a mistake. Checking whether the model describes how people actually learn
+         is a separate task, known as validation.")),
     on_submit = function(a) add_note("Step 1", "Checking the code", q1b_items[[1]]$label,
       test_choices[[a$test]],
       result = paste0("Light's gain from .30 and .30: ", num(checks$thirty$specified[["B"]]),

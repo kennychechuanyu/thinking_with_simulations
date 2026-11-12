@@ -10,9 +10,10 @@ ddm_settings_text <- paste0("drift diffusion model, drift rate 0.30 with boundar
 
 measurement_ui <- function() scene("scene-7", "7", "When a different measurement is needed",
   "output.done_f5", "done_x3",
-  "Two settings of the drift diffusion model predict the same accuracy but different decision times. Recording decision times changes the observation bridge.",
-  p("In the learning example, the alternative candidates could imitate the difference on pear
-     trials 8–10 closely but not exactly (Step 5), so with much larger experiments we might, in
+  "Two settings of the drift diffusion model predict the same accuracy but different decision times. Recording response times changes the observation bridge.",
+  p("In the learning example, the best fits we found for the alternative candidates imitated
+     the difference on pear trials 8–10 closely but not exactly (Step 5), so with much larger
+     experiments we might, in
      principle, still tell the explanations apart. With a model of simple decisions, we can
      examine a case in which two parameter settings predict exactly the same probability of a
      correct response."),
@@ -51,7 +52,7 @@ measurement_ui <- function() scene("scene-7", "7", "When a different measurement
     div(class = "end",
       settled("Two settings can predict exactly the same accuracy, so that no number of
                accuracy-only trials distinguishes them, and yet predict different decision
-               times. Recording decision times changed the observation bridge, not the rules or
+               times. Recording response times changed the observation bridge, not the rules or
                the settings.",
               "How precisely the two parameters could be estimated from a limited experiment. As
                in Step 5, we could answer this by fitting the model to responses and response
@@ -108,7 +109,7 @@ measurement_server <- function(input, output, answers, add_note) {
       first = "The first: slower drift, boundaries farther apart.",
       second = "The second: faster drift, boundaries closer together.",
       same = "The same for both.")),
-    item("part", "Which part of a model's prediction would recording decision times change?", c(
+    item("part", "Which part of a model's prediction would recording response times change?", c(
       bridge = "The observation bridge, which links model states to what is recorded.",
       rules = "The rules of the model.",
       settings = "The settings: the parameter values.")))
@@ -142,7 +143,7 @@ measurement_server <- function(input, output, answers, add_note) {
              x2_items[[3]]$choices[[a$part]]),
       result = paste0("Mean decision time ", num0(dd$mean[1], 2), " under the first setting and ",
                       num0(dd$mean[2], 2), " under the second. Accuracy ", num(dd$acc[1]),
-                      " under both. Recording decision times changes the observation bridge."),
+                      " under both. Recording response times changes the observation bridge."),
       settings = ddm_settings_text))
 
   output$p_ddm <- renderPlot({ req(answers$x2); plot_ddm_finished(dd) })

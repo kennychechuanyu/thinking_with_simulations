@@ -49,7 +49,7 @@ shared_ui <- function() scene("scene-6", "6", "Checking what the candidates shar
                more decisive but favored associability carryover even when carried learned value
                had generated the responses. The first-response check tested a prediction that all
                the candidates shared, and it flagged nearly all of those wrong conclusions."),
-              "A rejection does not show which shared assumption failed. Before an experiment,
+              "A rejection does not show which shared assumption, if any, failed. Before an experiment,
                we can ask whether the candidates represent each plausible source of a difference
                and whether the experiment records responses that can check their shared
                predictions."),
@@ -219,7 +219,7 @@ shared_server <- function(input, output, answers, add_note, flag, experiment) {
         result = paste0(f$d_only, " participants said yes to D only and ", f$b_only,
                         " yes to B only (", p_text(f$p), ")."),
         settings = paste0(design_set(), "; first responses to B and D, exact one-sided paired test at the .05 level"),
-        open = "If equality is rejected, which shared assumption failed: the starting values, the response function, or something the models leave out?")
+        open = "If equality is rejected, which shared assumption, if any, failed: the starting values, the response function, or something the models leave out?")
     })
 
   # The reveal comes after the first-response check, or after the question

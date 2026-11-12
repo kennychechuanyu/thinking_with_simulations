@@ -2,7 +2,7 @@
 
 Code for the paper
 
-> Yu, K. (2026). *Thinking with computational models to guide scientific inquiry* [Manuscript submitted for publication]. KU Leuven.
+> Yu, K. (in press). Thinking with computational models to guide scientific inquiry. *Behavior Research Methods*.
 
 The repository contains the code for every example in the paper, the scripts that
 produce each figure, table and reported number, the saved results of the simulation

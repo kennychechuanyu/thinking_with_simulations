@@ -115,8 +115,8 @@ assumptions_ui <- function() {
          from the ", ordinal(peak_k), " to the ", ordinal(which.max(eta_low$adaptive$gap) - 1),
          " pear trial. We can choose the amount of training in an experiment, but we do not know
          a participant's &eta; in advance, so we do not know on which pear trial the gap will be
-         largest. A test only at the end of the pear trials would show whether a difference
-         remains, but not when it appeared or how it developed."),
+         largest. A test only at the end of the pear trials would not show when a difference
+         appeared or how it developed."),
       h3("Which conclusions depend on the rule"),
       P("Under the rule used so far, Equation 3, associability changes in proportion to the
          difference between the two errors and does not change when the errors are equal. This
@@ -147,7 +147,8 @@ assumptions_ui <- function() {
                so preventing or removing it removes the gap, as it must. Carried-over learned
                value gives Rescorla–Wagner a gap too, but one that is largest before the first
                pear trial. Whether D is a fair comparison light depends on the rule: among the
-               three rules, only under Equation 3.",
+               three rules, only Equation 3 keeps it fair when C is slightly more salient
+               than D.",
               "These are all differences in learned values, which we cannot observe. Step 4 asks
                how they would appear in a participant's responses."),
       aside("Section 4, Equations 4 and 5, Figures 4 and 5, Table 5 and Box 3; Supplements S3 and S4.1."))
@@ -441,7 +442,8 @@ assumptions_server <- function(input, output, answers, add_note) {
     largest gap is then only about ", num(max(rank_r$mismatched$gap)), ". If the rule also lowered
     associability when the errors are equal, as Mackintosh proposed, D would lose as much
     associability during the CD+ trials as B does during the AB+ trials, and there would be no gap
-    at all. Among these rules, D is a fair comparison light only under Equation 3.")
+    at all. Among these rules, only under Equation 3 does D remain a fair comparison light when C
+    is slightly more salient than D.")
   ask_server("q3e", input, output, answers, q3e_items, button = "See the three rules",
     feedback = function(a) tagList(
       if (a$prop != "same") p("Under Equation 3, the size of the change in

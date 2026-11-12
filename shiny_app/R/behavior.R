@@ -35,8 +35,8 @@ behavior_ui <- function() {
       p("A response function may be part of a psychological theory of responding, as in the
          choice rule of Luce (1959), or an additional assumption linking learned values to a
          particular measure. In either case, its form and parameters need support from a theory
-         of responding, from independent data, or from both. For example, in these models a cue
-         that has never been followed by an outcome has learned value zero. Yes responses to
+         of responding, from independent data, or from both. For example, in these models a new
+         cue has learned value zero. Yes responses to
          such a cue could help estimate the probability of a yes at learned value zero, provided
          the same function applies to it. We consider two forms:"),
       tags$ul(
